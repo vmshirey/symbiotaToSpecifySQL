@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 
 	OccID int(10),
 	TempColObjectID int(11) auto_increment PRIMARY KEY,
-	CollectionObject int(11),
+	CollectionObjectID int(11),
 	CollectionMemberID int(11),
 	CollectionEventID int(11),
 	

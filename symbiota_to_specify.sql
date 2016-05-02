@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 
 	OccID int(10),
 	TempColObjectID int(11) auto_increment PRIMARY KEY,
-	CollectionObject int(11),
+	CollectionObjectID int(11),
 	CollectionMemberID int(11),
 	CollectionEventID,
 	
@@ -208,6 +208,31 @@ INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)
 	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName LIKE '%.%';
 	
 DELETE FROM tempAgent WHERE FirstName IS NULL OR LastName IS NULL;
+
+
+
+
+
+
+
+
+
+
+
+
+-- END STS_1.0 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- START STS_1.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 -- 
 /*(5)*/
