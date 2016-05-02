@@ -8,8 +8,7 @@ DROP VIEW IF EXISTS dwc_view;
 CREATE VIEW dwc_view AS
 SELECT occid, catalogNumber, otherCatalogNumbers, tidinterpreted AS taxonID, eventDate, verbatimEventDate, decimalLatitude, decimalLongitude, 
 verbatimCoordinates, minimumElevationInMeters, maximumElevationInMeters, verbatimElevation, locality, identifiedBy, recordedBy
-FROM omoccurrences
-;
+FROM omoccurrences;
 
 -- CREATE TABLE STATMENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -128,17 +127,16 @@ CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL au
 	-- FROM (SELECT occid, SUBSTRING_INDEX(recordedBy, ',', 1) as name FROM dwc_view) AS nameTable WHERE name IS NOT NULL AND name LIKE '%.%' AND name NOT LIKE '%#%' ORDER BY name;
 	
 -- GET NAMES THAT ARE SINGLE COLLECTORS PER RECORD PROCEDURE? --
-SELECT occid, name, SUBSTRING_INDEX(name, ' ',1) AS FirstName, SUBSTRING_INDEX(name, ' ',-1) AS LastName
-FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[,]' AND name NOT REGEXP '[&]'
+-- SELECT occid, name, SUBSTRING_INDEX(name, ' ',1) AS FirstName, SUBSTRING_INDEX(name, ' ',-1) AS LastName
+-- FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[,]' AND name NOT REGEXP '[&]'
 
-SELECT occid, name, SUBSTRING_INDEX(name, ',',2) AS FirstName, SUBSTRING_INDEX(name, ',',1) AS LastName
-FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[&]' AND name NOT REGEXP '[a-z]* [a-z]+$'
+-- SELECT occid, name, SUBSTRING_INDEX(name, ',',2) AS FirstName, SUBSTRING_INDEX(name, ',',1) AS LastName
+-- FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[&]' AND name NOT REGEXP '[a-z]* [a-z]+$'
 
 ----------------------------------------------------------------
 
 -- PROCEDURE FOR PARSING ALL COLLECTOR NAMES INTO INDIVIDUAL AGENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 /*(4)*/
-
 INSERT INTO tempAgent(verbatimName, occid)
 	SELECT recordedBy, occid FROM dwc_view;
 
@@ -200,13 +198,15 @@ SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP
 UPDATE agentReclamation
 SET finalID = SELECT newKey FROM agentReclamation LEFT JOIN (
 SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS agentKeys ON agentReclamation.tempAgentName = agentKeys.tempAgentName;
+
 	
-/*(7) */
+/*(7) */ -- INSERT NAMES TO tempAgent --
 INSERT INTO tempAgent(FirstName, LastName, tempAgentID)
 	SELECT SUBSTRING_INDEX(tempAgentName, ' ', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, ' ', -1) AS LastName, tempAgentNameID FROM agentReclamation WHERE tempAgentName NOT LIKE '%.%';
 
 INSERT INTO tempAgent(FirstName, LastName, tempAgentID)	
 	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID FROM agentReclamation WHERE tempAgentName LIKE '%.%';
+	
 	
 /*(5)*/
 -- BEGIN INSERT WITH TEMPORARY LOCALITIES --
