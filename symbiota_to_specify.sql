@@ -201,13 +201,15 @@ INSERT INTO tempAgent(verbatimName, occid)
 
 	
 /*(7) */ -- INSERT NAMES TO tempAgent --
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName)
-	SELECT SUBSTRING_INDEX(tempAgentName, ' ', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, ' ', -1) AS LastName, tempAgentNameID, tempAgentName FROM agentReclamation WHERE tempAgentName NOT LIKE '%.%' AND tempAgentName NOT LIKE '%&%';
+INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)
+	SELECT SUBSTRING_INDEX(tempAgentName, ' ', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, ' ', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName NOT LIKE '%.%' AND tempAgentName NOT LIKE '%&%';
 
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName)	
-	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID, tempAgentName FROM agentReclamation WHERE tempAgentName LIKE '%.%';
+INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)	
+	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName LIKE '%.%';
 	
 DELETE FROM tempAgent WHERE FirstName IS NULL OR LastName IS NULL;
+
+-- 
 /*(5)*/
 -- BEGIN INSERT WITH TEMPORARY LOCALITIES --
 INSERT INTO tempLocality(OccID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude)
