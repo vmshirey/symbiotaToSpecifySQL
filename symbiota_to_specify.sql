@@ -4,6 +4,7 @@
 -- CREATE DWC VIEW FROM SYMBIOTA -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 /*(1)*/
+DROP VIEW IF EXISTS dwc_view; 
 CREATE VIEW dwc_view AS
 SELECT occid, catalogNumber, otherCatalogNumbers, tidinterpreted AS taxonID, eventDate, verbatimEventDate, decimalLatitude, decimalLongitude, 
 verbatimCoordinates, minimumElevationInMeters, maximumElevationInMeters, verbatimElevation, locality, identifiedBy, recordedBy
@@ -14,6 +15,7 @@ FROM omoccurrences
 
 -- TEMPORARY AGENTS --
 /*(2)*/
+DROP TABLE IF EXISTS tempAgent();
 CREATE TABLE IF NOT EXISTS tempAgent (
 
 	OccID int(10),
@@ -28,10 +30,11 @@ CREATE TABLE IF NOT EXISTS tempAgent (
 );
 
 -- TEMPORARY COLLECTORS --
+DROP TABLE IF EXISTS tempCollector();
 CREATE TABLE IF NOT EXISTS tempCollector (
 
 	OccID int(10),
-	TempCollectorID int(11) NOT NULL auto_increment,
+	TempCollectorID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectorID int(11),
 	TimestampCreated datetime,
 	CollectingEventID int(11),
@@ -43,10 +46,11 @@ CREATE TABLE IF NOT EXISTS tempCollector (
 );
 
  -- TEMPORARY LOCALITIES --
+DROP TABLE IF EXISTS tempLocality();
 CREATE TABLE IF NOT EXISTS tempLocality (
 
 	OccID int(10),
-	TempLocalityID int(11) NOT NULL auto_increment,
+	TempLocalityID int(11) NOT NULL auto_increment PRIMARY KEY,
 	LocalityID int(11),
 	
 	Latitude1 decimal(12,10),
@@ -63,10 +67,11 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 );
 
  -- TEMPORARY COLLECTION EVENTS --
+DROP TABLE IF EXISTS tempColEvent();
 CREATE TABLE IF NOT EXISTS tempColEvent (
 	
 	OccID int(10),
-	TempColEventID int(11) NOT NULL auto_increment,
+	TempColEventID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectionEventID int(11),
 	TimestampCreate datetime,
 	DisciplineID int(11),
@@ -79,10 +84,11 @@ CREATE TABLE IF NOT EXISTS tempColEvent (
 );
 
 -- TEMPORARY COLLECTION OBJECT --
+DROP TABLE IF EXISTS tempColObject();
 CREATE TABLE IF NOT EXISTS tempColObject (
 
 	OccID int(10),
-	TempColObjectID int(11) auto_increment,
+	TempColObjectID int(11) auto_increment PRIMARY KEY,
 	CollectionObject int(11),
 	CollectionMemberID int(11),
 	CollectionEventID,
@@ -92,10 +98,11 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 );
 
 -- TEMPORARY DETERMINATION --
+DROP TABLE IF EXISTS tempDetermination();
 CREATE TABLE IF NOT EXISTS tempDetermination (
 
 	OccID int(10),
-	TempDeterminationID int(11) NOT NULL auto_increment,
+	TempDeterminationID int(11) NOT NULL auto_increment PRIMARY KEY,
 	DeterminationID int(11),
 	TimestampCreated datetime,
 	CollectionMemberID int(11),
@@ -110,7 +117,8 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 -- TABLE FOR HANDLING AGENT ASSIGNMENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 /*(3)*/
-CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment, tempAgentName varchar(170));
+DROP TABLE IF EXISTS agentReclamation();
+CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11));
 
 -- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
