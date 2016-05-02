@@ -23,3 +23,37 @@ INSERT INTO tempDetermination(OccID, TaxonID, CollectionObjectID)
 	SELECT dwc.occid, dwc.taxonID, tempColObj.CollectionObjectID 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occid = tempColObj.occid;
 
+ALTER TABLE tempAgent
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
+
+ALTER TABLE tempLocality
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
+
+ALTER TABLE tempColEvent
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
+
+ALTER TABLE tempColObject
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
+	
+ALTER TABLE tempDetermination
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;

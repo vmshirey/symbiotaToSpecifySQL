@@ -265,19 +265,39 @@ INSERT INTO tempDetermination(OccID, TaxonID, CollectionObjectID)
 -- ALTER TABLE WITH FOREIGN KEYS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
 ALTER TABLE tempAgent
-ADD FOREIGN KEY OccID REFERENCES tempLocality.OccID, tempColEvent.OccID, tempColObject.OccID, tempDetermination.OccID, tempCollector.OccID
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
 
 ALTER TABLE tempLocality
-ADD FOREIGN KEY OccID REFERENCES tempAgent.OccID, tempColEvent.OccID, tempColObject.OccID, tempDetermination.OccID, tempCollector.OccID
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
 
 ALTER TABLE tempColEvent
-ADD FOREIGN KEY OccID REFERENCES tempAgent.OccID, tempLocality.OccID, tempColObject.OccID, tempDetermination.OccID, tempCollector.OccID
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
 
 ALTER TABLE tempColObject
-ADD FOREIGN KEY OccID REFERENCES tempAgent.OccID, tempLocality.OccID, tempColEvent.OccID, tempDetermination.OccID, tempCollector.OccID
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
 	
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY OccID REFERENCES tempAgent.OccID, tempLocality.OccID, tempColEvent.OccID, tempColObject.OccID, tempCollector.OccID
+ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
+ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
 
 -- CREATE GROUPINGS  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
