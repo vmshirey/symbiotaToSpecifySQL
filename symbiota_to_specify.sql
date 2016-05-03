@@ -299,6 +299,19 @@ ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID,
 ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
 ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
 
+
+
+
+
+-- END sts_1.1.sql ------------------------------------------------------------------
+
+-- START sts_1.2.sql ----------------------------------------------------------------
+
+
+
+
+
+
 -- CREATE GROUPINGS  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 -- GET DISTINCT LOCALITY KEYS --

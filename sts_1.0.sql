@@ -185,7 +185,7 @@ DELIMITER ;
 
 CALL procIteration();
 
-DELETE FROM tempAgent; 
+DELETE FROM tempAgent WHERE FirstName IS NULL; 
 
 INSERT INTO tempAgent(verbatimName, occid)
 	SELECT identifiedBy, occid FROM dwc_view;
@@ -202,10 +202,10 @@ INSERT INTO tempAgent(verbatimName, occid)
 
 	
 /*(7) */ -- INSERT NAMES TO tempAgent --
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)
-	SELECT SUBSTRING_INDEX(tempAgentName, ' ', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, ' ', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName NOT LIKE '%.%' AND tempAgentName NOT LIKE '%&%';
+INSERT INTO tempAgent(FirstName, LastName, AgentID, verbatimName, OccID)
+	SELECT SUBSTRING_INDEX(agentReclamation.tempAgentName, ' ', 2) AS FirstName, SUBSTRING_INDEX(agentReclamation.tempAgentName, ' ', -1) AS LastName, targetKeys.newKey, agentReclamation.tempAgentName, OccID FROM agentReclamation JOIN (SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS targetKeys ON targetKeys.tempAgentName = agentReclamation.tempAgentName WHERE agentReclamation.tempAgentName NOT LIKE '%.%' AND agentReclamation.tempAgentName NOT LIKE '%&%';
 
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)	
-	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName LIKE '%.%';
+INSERT INTO tempAgent(FirstName, LastName, AgentID, verbatimName, OccID)
+	SELECT SUBSTRING_INDEX(agentReclamation.tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(agentReclamation.tempAgentName, '.', -1) AS LastName, targetKeys.newKey, agentReclamation.tempAgentName, OccID FROM agentReclamation JOIN(SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS targetKeys ON targetKeys.tempAgentName = agentReclamation.tempAgentName WHERE agentReclamation.tempAgentName LIKE '%.%';
 	
 DELETE FROM tempAgent WHERE FirstName IS NULL OR LastName IS NULL;
