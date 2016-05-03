@@ -50,6 +50,11 @@ SET CollectionEventID = tMin.minValue;
 UPDATE tempColEvent
 SET CollectionEventID = TempColEventID WHERE CollectionEventID IS NULL;
 
+-- link colevent to colobj --
+
+UPDATE tempColObject 
+SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.OccID = tempColObject.OccID);
+
 
 
 
