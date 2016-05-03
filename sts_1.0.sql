@@ -187,9 +187,15 @@ CALL procIteration();
 
 DELETE FROM tempAgent WHERE FirstName IS NULL; 
 
-INSERT INTO tempAgent(verbatimName, occid)
-	SELECT identifiedBy, occid FROM dwc_view;
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 2) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
 	
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy LIKE '%.%';
+
+UPDATE tempAgent JOIN (SELECT VerbatimName, MIN(TempAgentID) as minValue FROM tempAgent GROUP BY VerbatimName) tMin ON tempAgent.VerbatimName = tMin.VerbatimName
+SET AgentID = tMin.minValue;
+
 -- COMPACT AGENTS HERE!!!!!!!!!!!!!!!!!!!!!!!!!! -- -- -- -- -- -- -- -- -- -- -- --!!!!!!!
 
 -- SELECT agentReclamation.tempAgentNameID, agentReclamation.tempAgentName, agentKey.newKey

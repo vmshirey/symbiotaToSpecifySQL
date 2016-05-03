@@ -9,9 +9,9 @@ INSERT INTO tempColEvent(OccID, StartDate, VerbatimDate)
 	FROM dwc_view;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTORS --	
-INSERT INTO tempCollector(OccID, AgentID)
-	SELECT dwc.occid, tAgent.tempAgentID 
-	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occid = tAgent.occid;
+-- INSERT INTO tempCollector(OccID, AgentID)
+-- 	SELECT dwc.occid, tAgent.tempAgentID 
+-- 	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occid = tAgent.occid;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
 INSERT INTO tempColObject(OccID, AltCatalogNumber, CatalogNumber)
