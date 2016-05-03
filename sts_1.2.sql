@@ -17,7 +17,7 @@ SELECT OccID, AgentID FROM tempAgent WHERE tempAgent.AgentType IS NULL;
 UPDATE tempCollector JOIN (SELECT OccID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY OccID) tMin ON tempCollector.OccID = tMin.OccID AND tempCollector.TempCollectorID = tMin.minValue
 SET isPrimary = 1;
 
-UPDATE tempCollector JOIN (SELECT OccID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY OccID) tMin ON tempCollector.Occid = tMin.OccID
+UPDATE tempCollector JOIN (SELECT OccID, AgentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY AgentID) tMin ON tempCollector.AgentID = tMin.AgentID
 SET CollectorID = tMin.minValue;
 
 UPDATE tempDetermination

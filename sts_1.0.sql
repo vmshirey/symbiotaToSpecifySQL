@@ -147,7 +147,7 @@ BEGIN
 DECLARE done BOOLEAN DEFAULT FALSE;
 DECLARE verbatimNameHandler varchar(170);
 DECLARE occurrenceHandler int(11);
-DECLARE cur CURSOR FOR SELECT VerbatimName, OccID FROM tempAgent WHERE VerbatimName LIKE '%,%';
+DECLARE cur CURSOR FOR SELECT VerbatimName, OccID FROM tempAgent; -- WHERE VerbatimName LIKE '%,%';
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET done := TRUE;
 
 OPEN cur;
