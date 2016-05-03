@@ -30,3 +30,14 @@ SET LocalityID = tMin.minValue;
 
 UPDATE tempLocality
 SET LocalityID = TempLocalityID WHERE LocalityID IS NULL;
+
+-- handle ColEvent --
+
+UPDATE tempColEvent JOIN (SELECT StartDate, LocalityID, MIN(TempColEventID) as minValue FROM tempColEvent GROUP BY StartDate) tMin ON tempColEvent.StartDate = tMin.StartDate AND tempColEvent.LocalityID = tMin.LocalityID 
+SET CollectionEventID = tMin.minValue;
+
+UPDATE tempColEvent
+SET CollectionEventID = TempColEventID WHERE CollectionEventID IS NULL;
+
+-- link locality to CollectingEvent --
+
