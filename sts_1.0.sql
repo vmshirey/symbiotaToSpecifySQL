@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS tempAgent (
 	FirstName varchar(50),
 	LastName varchar(120)
 );
+DELETE FROM tempAgent;
 
 -- TEMPORARY COLLECTORS --
 DROP TABLE IF EXISTS tempCollector;
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS tempCollector (
 	AgentID int(11),
 	CollectingEventID int(11)
 );
+DELETE FROM tempCollector;
 
  -- TEMPORARY LOCALITIES --
 DROP TABLE IF EXISTS tempLocality;
