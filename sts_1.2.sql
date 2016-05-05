@@ -28,7 +28,7 @@ SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDe
 
 -- handle localities --
 
-UPDATE tempLocality JOIN (SELECT Long1Text, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Long1Text) tMin ON tempLocality.Long1Text = tMin.Long1Text OR tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
+UPDATE tempLocality JOIN (SELECT Long1Text, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Long1Text) tMin ON tempLocality.Long1Text = tMin.Long1Text AND tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
 SET LocalityID = tMin.minValue;
 
 UPDATE tempLocality
@@ -40,7 +40,7 @@ UPDATE tempColEvent
 SET LocalityID = (SELECT LocalityID FROM tempLocality WHERE tempColEvent.OccID = tempLocality.OccID); 
 
 UPDATE tempColEvent
-SET CollectorID = (SELECT MIN(CollectorID) FROM tempCollector WHERE tempColEvent.OccID = tempCollector.OccID);
+SET CollectorID = (SELECT CollectorID FROM tempCollector WHERE tempColEvent.OccID = tempCollector.OccID AND tempCollector.IsPrimary IS NOT NULL);
 
 -- handle ColEvent --
 
