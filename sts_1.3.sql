@@ -12,3 +12,9 @@ DROP FOREIGN KEY OccID;
 	
 ALTER TABLE tempDetermination
 DROP FOREIGN KEY OccID;
+
+DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
+
+DELETE FROM tempCollector WHERE tempCollector.CollectorID != tempCollector.TempCollectorID;
+
+DELETE FROM tempColEvent WHERE tempColEvent.CollectionEventID != tempColEvent.TempColEventID;
