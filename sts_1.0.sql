@@ -187,16 +187,13 @@ DELIMITER ;
 
 CALL procIteration();
 
-DELETE FROM tempAgent WHERE FirstName IS NULL; 
+DELETE FROM tempAgent; 
 
 INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
-	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 2) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
 	
 INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
 	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy LIKE '%.%';
-
-UPDATE tempAgent JOIN (SELECT VerbatimName, MIN(TempAgentID) as minValue FROM tempAgent GROUP BY VerbatimName) tMin ON tempAgent.VerbatimName = tMin.VerbatimName
-SET AgentID = tMin.minValue;
 
 -- COMPACT AGENTS HERE!!!!!!!!!!!!!!!!!!!!!!!!!! -- -- -- -- -- -- -- -- -- -- -- --!!!!!!!
 
@@ -215,3 +212,6 @@ INSERT INTO tempAgent(FirstName, LastName, AgentID, verbatimName, OccID)
 
 INSERT INTO tempAgent(FirstName, LastName, AgentID, verbatimName, OccID)
 	SELECT SUBSTRING_INDEX(agentReclamation.tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(agentReclamation.tempAgentName, '.', -1) AS LastName, targetKeys.newKey, agentReclamation.tempAgentName, OccID FROM agentReclamation JOIN(SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS targetKeys ON targetKeys.tempAgentName = agentReclamation.tempAgentName WHERE agentReclamation.tempAgentName LIKE '%.%';
+
+UPDATE tempAgent JOIN (SELECT VerbatimName, MIN(TempAgentID) as minValue FROM tempAgent GROUP BY VerbatimName) tMin ON tempAgent.VerbatimName = tMin.VerbatimName
+SET AgentID = tMin.minValue;
