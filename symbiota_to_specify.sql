@@ -1,6 +1,7 @@
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- AUTHOR: VAUGHN SHIREY
 -- Description: Moves core occurrence data through a Darwin Core view into tables that align with Specify.
+-- After executing this file, run a mysqldump for the temporary tables as well as the taxa, taxaenumtree tables.
 -- CREATE DWC VIEW FROM SYMBIOTA -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 /*(1)*/
@@ -325,3 +326,4 @@ DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
 DELETE FROM tempColEvent WHERE tempColEvent.CollectionEventID != tempColEvent.TempColEventID;
 
 DELETE FROM tempLocality WHERE tempLocality.LocalityID != tempLocality.tempLocalityID;
+
