@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS tempAgent (
 	FirstName varchar(50),
 	LastName varchar(120)
 );
+DELETE FROM tempAgent;
 
 -- TEMPORARY COLLECTORS --
 DROP TABLE IF EXISTS tempCollector;
@@ -36,13 +37,13 @@ CREATE TABLE IF NOT EXISTS tempCollector (
 	TempCollectorID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectorID int(11),
 	TimestampCreated datetime,
-	CollectingEventID int(11),
 	
 	IsPrimary bit(1),
 	OrderNumber int(11),
 	AgentID int(11),
 	CollectingEventID int(11)
 );
+DELETE FROM tempCollector;
 
  -- TEMPORARY LOCALITIES --
 DROP TABLE IF EXISTS tempLocality;
@@ -90,7 +91,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 	TempColObjectID int(11) auto_increment PRIMARY KEY,
 	CollectionObjectID int(11),
 	CollectionMemberID int(11),
-	CollectionEventID,
+	CollectionEventID int(11),
 	
 	AltCatalogNumber varchar(32),
 	CatalogNumber varchar(32)
@@ -117,25 +118,10 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 
 /*(3)*/
 DROP TABLE IF EXISTS agentReclamation;
-CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11));
+CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), OccID int(11));
 
 -- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
--- BEGIN INSERT WITH TEMPORARY AGENTS --
--- INSERT INTO tempAgent(OccID, VerbatimName, FirstName, LastName) -- update to obtain agents for each member of a collection team --
-	-- SELECT occid, name, SUBSTRING_INDEX(name, '.', 1) AS FirstName, SUBSTRING_INDEX(name, '.', -1)  AS LastName  -- alternatively could just use last names --
-	-- FROM (SELECT occid, SUBSTRING_INDEX(recordedBy, ',', 1) as name FROM dwc_view) AS nameTable WHERE name IS NOT NULL AND name LIKE '%.%' AND name NOT LIKE '%#%' ORDER BY name;
-	
--- GET NAMES THAT ARE SINGLE COLLECTORS PER RECORD PROCEDURE? --
--- SELECT occid, name, SUBSTRING_INDEX(name, ' ',1) AS FirstName, SUBSTRING_INDEX(name, ' ',-1) AS LastName
--- FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[,]' AND name NOT REGEXP '[&]'
-
--- SELECT occid, name, SUBSTRING_INDEX(name, ',',2) AS FirstName, SUBSTRING_INDEX(name, ',',1) AS LastName
--- FROM (SELECT occid, recordedBy as name FROM omoccurrences) AS names WHERE name NOT REGEXP '[&]' AND name NOT REGEXP '[a-z]* [a-z]+$'
-
-----------------------------------------------------------------
-
--- PROCEDURE FOR PARSING ALL COLLECTOR NAMES INTO INDIVIDUAL AGENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 /*(4)*/
 INSERT INTO tempAgent(verbatimName, occid)
 	SELECT recordedBy, occid FROM dwc_view;
@@ -148,23 +134,24 @@ CREATE PROCEDURE procIteration ()
 BEGIN
 DECLARE done BOOLEAN DEFAULT FALSE;
 DECLARE verbatimNameHandler varchar(170);
-DECLARE cur CURSOR FOR SELECT VerbatimName FROM tempAgent WHERE VerbatimName LIKE '%,%';
+DECLARE occurrenceHandler int(11);
+DECLARE cur CURSOR FOR SELECT VerbatimName, OccID FROM tempAgent; -- WHERE VerbatimName LIKE '%,%';
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET done := TRUE;
 
 OPEN cur;
 
 testLoop: LOOP
-	FETCH cur INTO verbatimNameHandler;
+	FETCH cur INTO verbatimNameHandler, occurrenceHandler;
 	IF done THEN 
 		LEAVE testLoop;
 	END IF;
-	CALL agent_reclamation(verbatimNameHandler);
+	CALL agent_reclamation(verbatimNameHandler, occurrenceHandler);
 END LOOP testLoop;
 
 CLOSE cur;
 END //
 
-CREATE PROCEDURE agent_reclamation (IN VerbatimName VARCHAR(170)) 
+CREATE PROCEDURE agent_reclamation (IN VerbatimName VARCHAR(170), IN OccIDMover int(11)) 
 BEGIN
 DECLARE verbatimNameHandler varchar(170);
 DECLARE tempAgentName varchar(170); 
@@ -173,11 +160,11 @@ SET verbatimNameHandler = VerbatimName;
 		IF LOCATE(',', verbatimNameHandler) > 0 THEN -- and theres a comma to be found
 			SET tempAgentName = SUBSTRING(verbatimNameHandler,1,LOCATE(',',verbatimNameHandler) - 1); -- set the temp variable to everything from the first character to the first comma
 		ELSE
-			SET tempAgentName = verbatimNameHandler; -- set the name if there are no commas
+			SET tempAgentName = verbatimNameHandler;-- set the name if there are no commas
 			SET verbatimNameHandler = ''; -- won't accept procedure without update --
 		END IF;
 		-- INSERT INTO agentReclamation SET tempAgentName = tempAgentName;
-		INSERT INTO agentReclamation(tempAgentName) VALUES (tempAgentName);  -- insert the new names into the agentReclamation table
+		INSERT INTO agentReclamation(tempAgentName, OccID) VALUES (tempAgentName, OccIDMover);  -- insert the new names into the agentReclamation table
 		SET verbatimNameHandler = REPLACE(verbatimNameHandler, CONCAT(tempAgentName, ','), ''); -- won't accept procedure without update --
 	END WHILE;
 END //
@@ -186,83 +173,42 @@ DELIMITER ;
 
 CALL procIteration();
 
-INSERT INTO tempAgent(verbatimName, occid)
-	SELECT identifiedBy, occid FROM dwc_view;
+DELETE FROM tempAgent; 
+
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
 	
--- COMPACT AGENTS HERE!!!!!!!!!!!!!!!!!!!!!!!!!! -- -- -- -- -- -- -- -- -- -- -- --!!!!!!!
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
 
---SELECT agentReclamation.tempAgentNameID, agentReclamation.tempAgentName, agentKey.newKey
---FROM agentReclamation LEFT JOIN (
---SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS agentKey ON agentReclamation.tempAgentName = agentKey.tempAgentName ORDER BY agentReclamation.tempAgentName 
-
---UPDATE agentReclamation
---SET finalID = SELECT newKey FROM agentReclamation LEFT JOIN (
---SELECT tempAgentName, MIN(tempAgentNameID) AS newKey FROM agentReclamation GROUP BY tempAgentName) AS agentKeys ON agentReclamation.tempAgentName = agentKeys.tempAgentName;
-
-	
-/*(7) */ -- INSERT NAMES TO tempAgent --
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)
-	SELECT SUBSTRING_INDEX(tempAgentName, ' ', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, ' ', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName NOT LIKE '%.%' AND tempAgentName NOT LIKE '%&%';
-
-INSERT INTO tempAgent(FirstName, LastName, tempAgentID, verbatimName, OccID)	
-	SELECT SUBSTRING_INDEX(tempAgentName, '.', 1) AS FirstName, SUBSTRING_INDEX(tempAgentName, '.', -1) AS LastName, tempAgentNameID, tempAgentName, OccID FROM agentReclamation WHERE tempAgentName LIKE '%.%';
-	
-DELETE FROM tempAgent WHERE FirstName IS NULL OR LastName IS NULL;
-
-
-
-
-
-
-
-
-
-
-
-
--- END STS_1.0 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
--- START STS_1.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
--- 
-/*(5)*/
--- BEGIN INSERT WITH TEMPORARY LOCALITIES --
+DELETE FROM tempLocality;
 INSERT INTO tempLocality(OccID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude)
 	SELECT occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
 	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude 
 	FROM (SELECT occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
 	
 -- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
+DELETE FROM tempColEvent;
 INSERT INTO tempColEvent(OccID, StartDate, VerbatimDate)
 	SELECT occid, eventDate, verbatimEventDate
 	FROM dwc_view;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTORS --	
-INSERT INTO tempCollector(OccID, AgentID)
-	SELECT dwc.occid, tAgent.tempAgentID 
-	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occid = tAgent.occid;
+-- INSERT INTO tempCollector(OccID, AgentID)
+-- 	SELECT dwc.occid, tAgent.tempAgentID 
+-- 	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occid = tAgent.occid;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
+DELETE FROM tempColObject;
 INSERT INTO tempColObject(OccID, AltCatalogNumber, CatalogNumber)
 	SELECT occid, otherCatalogNumbers, catalogNumber
 	FROM dwc_view;
 
 -- BEGIN INSERT INTO TEMPORARY DETERMINATIONS --
+DELETE FROM tempDetermination;
 INSERT INTO tempDetermination(OccID, TaxonID, CollectionObjectID)
-	SELECT dwc.occid, dwc.tidinterpreted, tempColObj.CollectionObjectID 
+	SELECT dwc.occid, dwc.taxonID, tempColObj.CollectionObjectID 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occid = tempColObj.occid;
-	
--- ALTER TABLE WITH FOREIGN KEYS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 
 ALTER TABLE tempAgent
 ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
@@ -299,79 +245,86 @@ ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID,
 ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
 ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
 
+ALTER TABLE tempCollector
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent.AgentID;
 
+ALTER TABLE tempDetermination
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent.AgentID;
 
+ALTER TABLE tempDetermination
+ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject.TempColObjectID;
 
+ALTER TABLE tempColEvent
+ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality.LocalityID;
 
--- END sts_1.1.sql ------------------------------------------------------------------
+INSERT INTO tempCollector(OccID, AgentID)
+SELECT OccID, AgentID FROM tempAgent WHERE tempAgent.AgentType IS NULL;
 
--- START sts_1.2.sql ----------------------------------------------------------------
+-- set primary collectors --
+UPDATE tempCollector JOIN (SELECT OccID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY OccID) tMin ON tempCollector.OccID = tMin.OccID AND tempCollector.TempCollectorID = tMin.minValue
+SET isPrimary = 1;
 
-
-
-
-
-
--- CREATE GROUPINGS  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
--- GET DISTINCT LOCALITY KEYS --
-SELECT omoccurrences.locality, localityKeys.newKey 
-FROM omoccurrences LEFT JOIN (
-SELECT locality, MIN(occid) AS newKey FROM omoccurrences GROUP BY locality) AS localityKeys ON omoccurrences.locality = localityKeys.locality ORDER BY newKey;
-
--- GET DISTINCT COLLECTOR/AGENT KEYS --
-SELECT omoccurrences.recordedBy, collectorKeys.newKey, omoccurrences.occid
-FROM omoccurrences LEFT JOIN (
-SELECT recordedBy, MIN(occid) AS newKey FROM omoccurrences GROUP BY recordedBy) AS collectorKeys ON omoccurrences.recordedBy = collectorKeys.recordedBy WHERE omoccurrences.recordedBy IS NOT NULL ORDER BY newKey ;
-
--- UPDATES -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-/*(5)*/
-UPDATE tempCollector
-SET CollectorID = (SELECT newKey FROM dwc_view LEFT JOIN (
-SELECT recordedBy, MIN(TempCollectorID) AS newKey FROM dwc_view GROUP BY recordedBy) AS collectorKeys ON dwc_view.recordedBy = collectorKeys.recordedBy);
-
-UPDATE 
-tempLocality
-SET LocalityID = (SELECT newKey FROM dwc_view LEFT JOIN (
-SELECT Long1Text, MIN(TempLocalityID) AS newKey FROM tempLocality GROUP BY Long1Text) AS localityKeys ON dwc_view.locality = localityKeys.Long1Text
-WHERE dwc_view.locality = localityKeys.Long1Text);
-
-UPDATE tempColEvent
-SET CollectingEventID = (SELECT newKey FROM dwc_view LEFT JOIN (
-SELECT eventDate, locality, recordedBy, occid, MIN(TempColEventID) AS newKey FROM dwc_view GROUP BY eventDate, locality, recordedBy) AS eventKeys ON dwc_view.occid = eventKeys.occid);
-
-
--- BEGIN LINKAGES -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-/*(6)*/
-UPDATE tempColEvent
-SET localityID = SELECT localityID FROM tempLocality, tempColEvent WHERE tempLocality.OccID = tempColEvent.OccID
-
-UPDATE tempCollector -- update this to obtain distinct collection events above --
-SET CollectionEventID = SELECT CollectionEventID FROM tempColEvent, tempCollector WHERE tempColEvent.OccID = tempCollector.OccID
+UPDATE tempCollector JOIN (SELECT OccID, AgentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY AgentID) tMin ON tempCollector.AgentID = tMin.AgentID
+SET CollectorID = tMin.minValue;
 
 UPDATE tempDetermination
-SET AgentID = SELECT tempAgentID FROM tempAgent, tempDetermination WHERE tempDetermination.Occid = tempAgent.OccID
+SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempDetermination.OccID = tempAgent.OccID AND tempAgent.AgentType = 2);
 
-UPDATE tempColObj 
-SET CollectionEventID = SELECT CollectionEventID FROM tempColEVent, tempColObj WHERE tempColEvent.OccID = tempColObj.OccID
+UPDATE tempDetermination
+SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDetermination.OccID = tempColObject.OccID);
 
--- REMOVE DUPLICATES -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- handle localities --
 
-DELETE FROM tempCollector
-WHERE tempCollectorID != CollectorID;
+UPDATE tempLocality JOIN (SELECT Long1Text, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Long1Text) tMin ON tempLocality.Long1Text = tMin.Long1Text AND tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
+SET LocalityID = tMin.minValue;
 
-DELETE FROM tempLocality
-WHERE tempLocalityID != LocalityID;
+UPDATE tempLocality
+SET LocalityID = TempLocalityID WHERE LocalityID IS NULL;
 
--- DROP OCCID COLUMN -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- link locality/collector to CollectingEvent --
 
-ALTER TABLE tempCollector
-DROP COLUMN OccID;
+UPDATE tempColEvent
+SET LocalityID = (SELECT LocalityID FROM tempLocality WHERE tempColEvent.OccID = tempLocality.OccID); 
+
+UPDATE tempColEvent
+SET CollectorID = (SELECT CollectorID FROM tempCollector WHERE tempColEvent.OccID = tempCollector.OccID AND tempCollector.IsPrimary IS NOT NULL);
+
+-- handle ColEvent --
+
+UPDATE tempColEvent JOIN (SELECT StartDate, LocalityID, CollectorID, MIN(TempColEventID) as minValue FROM tempColEvent GROUP BY StartDate) tMin ON tempColEvent.StartDate = tMin.StartDate AND tempColEvent.LocalityID = tMin.LocalityID AND tempColEvent.CollectorID = tMin.CollectorID
+SET CollectionEventID = tMin.minValue;
+
+UPDATE tempColEvent
+SET CollectionEventID = TempColEventID WHERE CollectionEventID IS NULL;
+
+-- link colevent to colobj/collector --
+
+UPDATE tempColObject 
+SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.OccID = tempColObject.OccID);
+
+UPDATE tempCollector
+SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.OccID = tempCollector.OccID);
+
+ALTER TABLE tempAgent
+DROP FOREIGN KEY OccID;  
 
 ALTER TABLE tempLocality
-DROP COLUMN OccID;
+DROP FOREIGN KEY OccID;
+
+ALTER TABLE tempColEvent
+DROP FOREIGN KEY OccID;
+
+ALTER TABLE tempColObject
+DROP FOREIGN KEY OccID;
+	
+ALTER TABLE tempDetermination
+DROP FOREIGN KEY OccID;
+
+DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
+
+DELETE FROM tempColEvent WHERE tempColEvent.CollectionEventID != tempColEvent.TempColEventID;
+
+DELETE FROM tempLocality WHERE tempLocality.LocalityID != tempLocality.tempLocalityID;
 
 
 
