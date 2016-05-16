@@ -3,6 +3,8 @@
 -- Description: Moves core occurrence data through a Darwin Core view into tables that align with Specify.
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+-- Remove previous tables used in handling specimen data --
+
 -- Begin inserting into the official Specify tables --
 
 INSERT INTO agent (AgentID, TimestampCreated, Version, AgentType, FirstName, LastName, DivisionID)

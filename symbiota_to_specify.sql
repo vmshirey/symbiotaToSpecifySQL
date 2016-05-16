@@ -269,7 +269,7 @@ UPDATE tempCollector JOIN (SELECT OccID, AgentID, MIN(TempCollectorID) as minVal
 SET CollectorID = tMin.minValue;
 
 UPDATE tempDetermination
-SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempDetermination.OccID = tempAgent.OccID AND tempAgent.AgentType = 2);
+SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempDetermination.OccID = tempAgent.OccID);
 
 UPDATE tempDetermination
 SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDetermination.OccID = tempColObject.OccID);
