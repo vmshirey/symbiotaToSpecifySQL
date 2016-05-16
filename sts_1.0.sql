@@ -189,11 +189,11 @@ CALL procIteration();
 
 DELETE FROM tempAgent; 
 
-INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
-	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
 	
-INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType)
-	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2 FROM dwc_view WHERE identifiedBy LIKE '%.%';
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
 
 -- COMPACT AGENTS HERE!!!!!!!!!!!!!!!!!!!!!!!!!! -- -- -- -- -- -- -- -- -- -- -- --!!!!!!!
 
