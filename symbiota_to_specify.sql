@@ -325,6 +325,3 @@ DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
 DELETE FROM tempColEvent WHERE tempColEvent.CollectionEventID != tempColEvent.TempColEventID;
 
 DELETE FROM tempLocality WHERE tempLocality.LocalityID != tempLocality.tempLocalityID;
-
-
-
