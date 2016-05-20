@@ -259,7 +259,7 @@ ALTER TABLE tempColEvent
 ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality.LocalityID;
 
 INSERT INTO tempCollector(OccID, AgentID)
-SELECT OccID, AgentID FROM tempAgent WHERE tempAgent.AgentType IS NULL;
+SELECT OccID, AgentID FROM tempAgent; -- WHERE tempAgent.AgentType -- IS NULL;
 
 -- set primary collectors --
 UPDATE tempCollector JOIN (SELECT OccID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY OccID) tMin ON tempCollector.OccID = tMin.OccID AND tempCollector.TempCollectorID = tMin.minValue
