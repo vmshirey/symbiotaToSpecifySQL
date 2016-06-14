@@ -24,10 +24,10 @@ DECLARE My_TaxonName varchar(170);
 DECLARE My_RankID varchar(170);
 DECLARE My_ParentID varchar(170);
 DECLARE My_TaxonID varchar(170);
-DECLARE cur CURSOR FOR SELECT DISTINCT SciName, rankID, MAX(parenttid) as parentID, taxaenumtree.tid FROM taxaenumtree, taxa WHERE taxa.tid = taxaenumtree.tid GROUP BY taxaenumtree.tid; 
+DECLARE cur CURSOR FOR SELECT DISTINCT SciName, rankID, MAX(parenttid) as parentID, taxaRelation_temp.tid FROM taxaRelation_temp, taxa WHERE taxa.tid = taxaRelation_temp.tid GROUP BY taxaRelation_temp.tid; 
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET done := TRUE;
 
--- SELECT child.SciName, RankID, parent.parentID, child.tid FROM taxa child LEFT JOIN (SELECT MAX(parenttid) as parentID, SciName, taxaenumtree.tid FROM taxaenumtree, taxa WHERE taxa.tid = taxaenumtree.tid GROUP BY taxaenumtree.tid) AS parent ON parent.tid = child.tid WHERE rankID = 10;
+-- SELECT child.SciName, RankID, parent.parentID, child.tid FROM taxa child LEFT JOIN (SELECT MAX(parenttid) as parentID, SciName, taxaRelation_temp.tid FROM taxaRelation_temp, taxa WHERE taxa.tid = taxaRelation_temp.tid GROUP BY taxaRelation_temp.tid) AS parent ON parent.tid = child.tid WHERE rankID = 10;
 
 OPEN cur;
 
@@ -54,7 +54,7 @@ SET TaxonNameInput = TaxonNameIn;
 SET RankIDInput = RankIDIn;
 SET TaxonIDInput = TaxonIDIn;
 SET ParentIDInput = ParentIDIn;
-SET ParentName = (SELECT taxa.SciName FROM taxa, taxaenumtree WHERE taxa.tid = taxaenumtree.parenttid AND taxaenumtree.parenttid = ParentIDIn AND taxaenumtree.tid = TaxonIDIn);
+SET ParentName = (SELECT taxa.SciName FROM taxa, taxaRelation_temp WHERE taxa.tid = taxaRelation_temp.parenttid AND taxaRelation_temp.parenttid = ParentIDIn AND taxaRelation_temp.tid = TaxonIDIn);
 
 INSERT INTO taxon_reclamation(TaxonID, FullName, `Name`, RankID, ParentID, TaxonTreeDefID, TaxonTreeDefItemID, ParentName)
 VALUES (TaxonIDInput, TaxonNameInput, TaxonNameInput, RankIDInput, ParentIDInput, 1, 1, ParentName);
