@@ -56,5 +56,12 @@ SET TaxonTreeDefItemID = 12 WHERE RankID = 240;
 UPDATE taxon
 SET TaxonTreeDefItemID = 13 WHERE RankID = 260;
 
-UPDATE taxon LEFT JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = "PH") AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
+UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = "PH") AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
 SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = "PH";
+
+INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, TaxonID, CollectionObjectID, PreferredTaxonID, DeterminerID)
+SELECT now(), 0 as Version, 4 as CollectionMemberID, taxon.TaxonID, collectionobject.CollectionObjectID, taxon.TaxonID, tempDetermination.AgentID 
+FROM taxon, tempDetermination, collectionobject 
+WHERE taxon.PreviousTaxonID = tempDetermination.TaxonID 
+AND taxon.CollectionCode = "PH"
+AND collectionobject.TimestampCreated LIKE "%05-18%";
