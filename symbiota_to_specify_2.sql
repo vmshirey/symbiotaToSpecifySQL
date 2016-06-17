@@ -68,8 +68,9 @@ AND tempDetermination.CollectionObjectID = collectionobject.CollectionObjectID +
 UPDATE determination INNER JOIN (SELECT TaxonID FROM taxon WHERE CollectionCode = "PH") AS taxa ON  determination.oldTaxonID = taxa.TaxonID
 SET determination.TaxonID = taxa.TaxonID, PreferredTaxonID = taxa.TaxonID, IsCurrent = 1;
 
-SELECT geographyID, country, `state`, county, FullName
-FROM geography, geography_view 
-JOIN (SELECT g.name AS stateName, g.geographyID AS stateID
- FROM geography AS g) AS parents ON parents.stateName = geography_view.`state`  
- WHERE geography.name = geography_view.county;
+SELECT occid, geography.geographyID, country, `state`, county, FullName, ParentID
+FROM geography_view, geography 
+INNER JOIN (SELECT g.name AS stateName, g.geographyID
+ FROM geography AS g) AS parents ON geography.ParentID = parents.geographyID  
+ WHERE geography.name = geography_view.county
+ AND geography_view.`state` = parents.stateName;
