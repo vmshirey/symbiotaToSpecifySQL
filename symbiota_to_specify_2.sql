@@ -59,9 +59,17 @@ SET TaxonTreeDefItemID = 13 WHERE RankID = 260;
 UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = "PH") AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
 SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = "PH";
 
-INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, TaxonID, CollectionObjectID, PreferredTaxonID, DeterminerID)
-SELECT now(), 0 as Version, 4 as CollectionMemberID, taxon.TaxonID, collectionobject.CollectionObjectID, taxon.TaxonID, tempDetermination.AgentID 
-FROM taxon, tempDetermination, collectionobject 
-WHERE taxon.PreviousTaxonID = tempDetermination.TaxonID 
-AND taxon.CollectionCode = "PH"
-AND collectionobject.TimestampCreated LIKE "%05-18%";
+INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, oldTaxonID, CollectionObjectID, DeterminerID)
+SELECT collectionobject.TimestampCreated, 1 AS version, 4 as CollectionMemberID, TaxonID, collectionobject.CollectionObjectID, AgentID
+FROM tempDetermination, collectionobject
+WHERE collectionobject.TimestampCreated = '2016-05-18 10:27:15'
+AND tempDetermination.CollectionObjectID = collectionobject.CollectionObjectID + 2017;
+
+UPDATE determination INNER JOIN (SELECT TaxonID FROM taxon WHERE CollectionCode = "PH") AS taxa ON  determination.oldTaxonID = taxa.TaxonID
+SET determination.TaxonID = taxa.TaxonID, PreferredTaxonID = taxa.TaxonID, IsCurrent = 1;
+
+SELECT geographyID, country, `state`, county, FullName
+FROM geography, geography_view 
+JOIN (SELECT g.name AS stateName, g.geographyID AS stateID
+ FROM geography AS g) AS parents ON parents.stateName = geography_view.`state`  
+ WHERE geography.name = geography_view.county;
