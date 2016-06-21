@@ -20,8 +20,8 @@ SELECT  now(), 0 as Version, StartDate, LocalityID + 2011, 3 as DisciplineID FRO
 INSERT INTO collector (TimestampCreated, Version, IsPrimary, DivisionID, CollectingEventID, AgentID)
 SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, CollectingEventID + 2017, AgentID FROM tempCollector;
 
-INSERT INTO collectionobject (TimestampCreated, Version, CollectionMemberID, CollectingEventID, CollectionID, CatalogNumber, AltCatalogNumber)
-SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectionEventID + 2017, 4 as CollectionID, CatalogNumber, AltCatalogNumber FROM tempColObject;
+INSERT INTO collectionobject (TimestampCreated, Version, CollectionMemberID, CollectingEventID, CollectionID, CatalogNumber, AltCatalogNumber, previousOccid)
+SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectionEventID + 2017, 4 as CollectionID, CatalogNumber, AltCatalogNumber, occid FROM tempColObject;
 
 -- Handle taxonomy prior to linking determinations --
 
@@ -68,9 +68,18 @@ AND tempDetermination.CollectionObjectID = collectionobject.CollectionObjectID +
 UPDATE determination INNER JOIN (SELECT TaxonID FROM taxon WHERE CollectionCode = "PH") AS taxa ON  determination.oldTaxonID = taxa.TaxonID
 SET determination.TaxonID = taxa.TaxonID, PreferredTaxonID = taxa.TaxonID, IsCurrent = 1;
 
-SELECT occid, geography.geographyID, country, `state`, county, FullName, ParentID
-FROM geography_view, geography 
-INNER JOIN (SELECT g.name AS stateName, g.geographyID
+SELECT LocalityID, Country, `State`, County FROM tempLocality JOIN geography_view ON geography_view.OccID = tempLocality.OccID; -- 104650 v. 102639 = 2011 --
+
+UPDATE locality  
+SET GeographyID = (SELECT geographyID FROM 
+(SELECT geography.geographyID, `state`, county, ParentID
+FROM locality, geography 
+LEFT JOIN (SELECT g.name AS stateName, g.geographyID
  FROM geography AS g) AS parents ON geography.ParentID = parents.geographyID  
- WHERE geography.name = geography_view.county
- AND geography_view.`state` = parents.stateName;
+ WHERE geography.name = locality.county
+ AND locality.`state` = parents.stateName) AS finalID);
+ 
+ UPDATE locality JOIN (SELECT * FROM geography JOIN (SELECT GeographyID as geoID, Name AS ParentName FROM geography) AS parent ON parent.geoID = geography.ParentID) AS geo ON locality.county = geo.name 
+AND locality.`state` = geo.ParentName
+SET locality.GeographyID = geo.GeographyID
+WHERE locality.TimestampCreated = "2016-05-18 10:11:17"
