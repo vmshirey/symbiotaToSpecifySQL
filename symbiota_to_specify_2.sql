@@ -84,3 +84,8 @@ ON geo.FullName LIKE CONCAT('%', geo.ParentName, '%', geo.Name, '%')
 SET locality.GeographyID = geo.GeographyID
 WHERE locality.TimestampCreated = "2016-05-18 10:11:17"
 AND locality.GeographyID IS NULL;
+
+UPDATE locality JOIN geography ON geography.Name LIKE locality.country
+SET locality.GeographyID = geography.GeographyID
+WHERE locality.TimestampCreated = "2016-05-18 10:11:17"
+AND locality.GeographyID IS NULL;
