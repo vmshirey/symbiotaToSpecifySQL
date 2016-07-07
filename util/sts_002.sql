@@ -11,8 +11,8 @@ INSERT INTO agent (AgentID, TimestampCreated, Version, AgentType, FirstName, Las
 SELECT AgentID, now(), 0 as Version, 1 as AgentType, FirstName, LastName FROM tempAgent;
 
 -- add geographyID to this! --
-INSERT INTO locality (TimestampCreated, Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, DisciplineID)
-SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID FROM tempLocality;
+INSERT INTO locality (TimestampCreated, Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, DisciplineID, Country, `State`, County )
+SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID, Country, `State`, County  FROM tempLocality;
 
 -- change to remove number shifting and make more general --
 INSERT INTO collectingevent (TimestampCreated, Version, StartDate, LocalityID, DisciplineID)
@@ -30,7 +30,7 @@ SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectionEventID + 2017, 4
 
 -- Change collection code to be appropriate --
 INSERT INTO taxon (TimestampCreated, Version, FullName, Name, RankID, TaxonTreeDefID, TaxonTreeDefItemID, PreviousParentID, ParentName, PreviousTaxonID, CollectionCode)
-SELECT now(), 0 as Version, FullName, Name, RankID, TaxonTreeDefID, 1, ParentID, ParentName, TaxonID, "PH" as CollectionCode FROM taxon_reclamation;
+SELECT now(), 0 as Version, FullName, Name, RankID, TaxonTreeDefID, 1, ParentID, ParentName, TaxonID, "PH" as CollectionCode FROM taxon_reclamation; -- change collection code dependency
 
 UPDATE taxon
 SET TaxonTreeDefItemID = 1 WHERE RankID = 0;

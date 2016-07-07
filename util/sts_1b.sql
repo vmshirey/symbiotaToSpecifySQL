@@ -56,7 +56,10 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 	VerbatimLatitude varchar(50),
 	VerbatimLongitude varchar(50),
 	
-	Long1Text varchar(50)
+	Long1Text varchar(50),
+	Country varchar(100),
+	`State` varchar(100),
+	County varchar(100)
 );
 
  -- TEMPORARY COLLECTION EVENTS --
@@ -175,10 +178,10 @@ INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, Times
 	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
 
 DELETE FROM tempLocality;
-INSERT INTO tempLocality(OccID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude)
+INSERT INTO tempLocality(OccID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
 	SELECT occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
-	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude 
-	FROM (SELECT occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
+	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, `State`, County 
+	FROM (SELECT Country, `State`, County, occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
 	
 -- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
 DELETE FROM tempColEvent;

@@ -6,7 +6,7 @@
 
 DROP VIEW IF EXISTS dwc_view; 
 CREATE VIEW dwc_view AS
-SELECT occid, 
+SELECT occid AS occurrenceID, 
 catalogNumber, 
 otherCatalogNumbers, 
 tidinterpreted AS taxonID, 
@@ -26,7 +26,8 @@ stateProvince,
 county, 
 family, 
 scientificName,
-genus
+genus,
+basisofrecord
 FROM omoccurrences;
 
 ---------------------------------------------------------
