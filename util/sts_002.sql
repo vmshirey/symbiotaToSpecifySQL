@@ -65,7 +65,7 @@ SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = "PH";
 INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, oldTaxonID, CollectionObjectID, DeterminerID)
 SELECT collectionobject.TimestampCreated, 1 AS version, 4 as CollectionMemberID, TaxonID, collectionobject.CollectionObjectID, AgentID
 FROM tempDetermination, collectionobject
-WHERE collectionobject.TimestampCreated = '2016-05-18 10:27:15'
+WHERE collectionobject.TimestampCreated = '2016-05-18 10:27:15' -- change
 AND tempDetermination.CollectionObjectID = collectionobject.CollectionObjectID + 2017;
 
 UPDATE determination INNER JOIN (SELECT TaxonID FROM taxon WHERE CollectionCode = "PH") AS taxa ON  determination.oldTaxonID = taxa.TaxonID
@@ -85,10 +85,10 @@ LEFT JOIN (SELECT g.name AS stateName, g.geographyID
 UPDATE locality JOIN (SELECT * FROM geography JOIN (SELECT GeographyID as geoID, Name AS ParentName FROM geography) AS parent ON parent.geoID = geography.ParentID) AS geo 
 ON geo.FullName LIKE CONCAT('%', geo.ParentName, '%', geo.Name, '%')
 SET locality.GeographyID = geo.GeographyID
-WHERE locality.TimestampCreated = "2016-05-18 10:11:17"
+WHERE locality.TimestampCreated = "2016-05-18 10:11:17" -- change
 AND locality.GeographyID IS NULL;
 
 UPDATE locality JOIN geography ON geography.Name LIKE locality.country
 SET locality.GeographyID = geography.GeographyID
-WHERE locality.TimestampCreated = "2016-05-18 10:11:17"
+WHERE locality.TimestampCreated = "2016-05-18 10:11:17" -- change
 AND locality.GeographyID IS NULL;
