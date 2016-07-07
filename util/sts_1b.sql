@@ -10,7 +10,7 @@
 DROP TABLE IF EXISTS tempAgent;
 CREATE TABLE IF NOT EXISTS tempAgent (
 
-	OccID int(10),
+	occurrenceID int(10),
 	TempAgentID int(11) NOT NULL auto_increment PRIMARY KEY,
 	AgentID int(11),
 	TimestampCreated datetime,
@@ -26,7 +26,7 @@ DELETE FROM tempAgent;
 DROP TABLE IF EXISTS tempCollector;
 CREATE TABLE IF NOT EXISTS tempCollector (
 
-	OccID int(10),
+	occurrenceID int(10),
 	TempCollectorID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectorID int(11),
 	TimestampCreated datetime,
@@ -42,7 +42,7 @@ DELETE FROM tempCollector;
 DROP TABLE IF EXISTS tempLocality;
 CREATE TABLE IF NOT EXISTS tempLocality (
 
-	OccID int(10),
+	occurrenceID int(10),
 	TempLocalityID int(11) NOT NULL auto_increment PRIMARY KEY,
 	LocalityID int(11),
 	
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 DROP TABLE IF EXISTS tempColEvent;
 CREATE TABLE IF NOT EXISTS tempColEvent (
 	
-	OccID int(10),
+	occurrenceID int(10),
 	TempColEventID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectionEventID int(11),
 	TimestampCreate datetime,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS tempColEvent (
 DROP TABLE IF EXISTS tempColObject;
 CREATE TABLE IF NOT EXISTS tempColObject (
 
-	OccID int(10),
+	occurrenceID int(10),
 	TempColObjectID int(11) auto_increment PRIMARY KEY,
 	CollectionObjectID int(11),
 	CollectionMemberID int(11),
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 DROP TABLE IF EXISTS tempDetermination;
 CREATE TABLE IF NOT EXISTS tempDetermination (
 
-	OccID int(10),
+	occurrenceID int(10),
 	TempDeterminationID int(11) NOT NULL auto_increment PRIMARY KEY,
 	DeterminationID int(11),
 	TimestampCreated datetime,
@@ -114,13 +114,13 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 
 /*(3)*/
 DROP TABLE IF EXISTS agentReclamation;
-CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), OccID int(11));
+CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), occurrenceID int(11));
 
 -- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 /*(4)*/
-INSERT INTO tempAgent(verbatimName, occid)
-	SELECT recordedBy, occid FROM dwc_view;
+INSERT INTO tempAgent(verbatimName, occurrenceID)
+	SELECT recordedBy, occurrenceID FROM dwc_view;
 
 DROP PROCEDURE IF EXISTS agent_reclamation;
 DROP PROCEDURE IF EXISTS procIteration;
@@ -131,7 +131,7 @@ BEGIN
 DECLARE done BOOLEAN DEFAULT FALSE;
 DECLARE verbatimNameHandler varchar(170);
 DECLARE occurrenceHandler int(11);
-DECLARE cur CURSOR FOR SELECT VerbatimName, OccID FROM tempAgent; -- WHERE VerbatimName LIKE '%,%';
+DECLARE cur CURSOR FOR SELECT VerbatimName, occurrenceID FROM tempAgent; -- WHERE VerbatimName LIKE '%,%';
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET done := TRUE;
 
 OPEN cur;
@@ -147,7 +147,7 @@ END LOOP testLoop;
 CLOSE cur;
 END //
 
-CREATE PROCEDURE agent_reclamation (IN VerbatimName VARCHAR(170), IN OccIDMover int(11)) 
+CREATE PROCEDURE agent_reclamation (IN VerbatimName VARCHAR(170), IN occurrenceIDMover int(11)) 
 BEGIN
 DECLARE verbatimNameHandler varchar(170);
 DECLARE tempAgentName varchar(170); 
@@ -160,7 +160,7 @@ SET verbatimNameHandler = VerbatimName;
 			SET verbatimNameHandler = ''; -- won't accept procedure without update --
 		END IF;
 		-- INSERT INTO agentReclamation SET tempAgentName = tempAgentName;
-		INSERT INTO agentReclamation(tempAgentName, OccID) VALUES (tempAgentName, OccIDMover);  -- insert the new names into the agentReclamation table
+		INSERT INTO agentReclamation(tempAgentName, occurrenceID) VALUES (tempAgentName, occurrenceIDMover);  -- insert the new names into the agentReclamation table
 		SET verbatimNameHandler = REPLACE(verbatimNameHandler, CONCAT(tempAgentName, ','), ''); -- won't accept procedure without update --
 	END WHILE;
 END //
@@ -171,70 +171,70 @@ CALL procIteration();
 
 DELETE FROM tempAgent; 
 
-INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
-	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occurrenceID, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, ' ', -1) AS LastName, dwc_view.occurrenceID, 2, now() FROM dwc_view WHERE identifiedBy NOT LIKE '%.%';
 	
-INSERT INTO tempAgent(verbatimName, FirstName, LastName, occid, AgentType, TimestampCreated)
-	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occid, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
+INSERT INTO tempAgent(verbatimName, FirstName, LastName, occurrenceID, AgentType, TimestampCreated)
+	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occurrenceID, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
 
 DELETE FROM tempLocality;
-INSERT INTO tempLocality(OccID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
-	SELECT occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
+INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
+	SELECT occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
 	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, `State`, County 
-	FROM (SELECT Country, `State`, County, occid, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
+	FROM (SELECT Country, `State`, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
 	
 -- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
 DELETE FROM tempColEvent;
-INSERT INTO tempColEvent(OccID, StartDate, VerbatimDate)
-	SELECT occid, eventDate, verbatimEventDate
+INSERT INTO tempColEvent(occurrenceID, StartDate, VerbatimDate)
+	SELECT occurrenceID, eventDate, verbatimEventDate
 	FROM dwc_view;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
 DELETE FROM tempColObject;
-INSERT INTO tempColObject(OccID, AltCatalogNumber, CatalogNumber)
-	SELECT occid, otherCatalogNumbers, catalogNumber
+INSERT INTO tempColObject(occurrenceID, AltCatalogNumber, CatalogNumber)
+	SELECT occurrenceID, otherCatalogNumbers, catalogNumber
 	FROM dwc_view;
 
 -- BEGIN INSERT INTO TEMPORARY DETERMINATIONS --
 DELETE FROM tempDetermination;
-INSERT INTO tempDetermination(OccID, TaxonID, CollectionObjectID)
-	SELECT dwc.occid, dwc.taxonID, tempColObj.CollectionObjectID 
-	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occid = tempColObj.occid;
+INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID)
+	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID 
+	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occurrenceID = tempColObj.occurrenceID;
 
 ALTER TABLE tempAgent
-ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID; 
 
 ALTER TABLE tempLocality
-ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID; 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID; 
 
 ALTER TABLE tempColEvent
-ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
 
 ALTER TABLE tempColObject
-ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempDetermination.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
 	
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (OccID) REFERENCES tempAgent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempLocality.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColEvent.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempColObject.OccID, 
-ADD FOREIGN KEY (OccID) REFERENCES tempCollector.OccID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
 
 ALTER TABLE tempCollector
 ADD FOREIGN KEY (AgentID) REFERENCES tempAgent.AgentID;
@@ -248,21 +248,21 @@ ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject.TempColObjectID;
 ALTER TABLE tempColEvent
 ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality.LocalityID;
 
-INSERT INTO tempCollector(OccID, AgentID)
-SELECT OccID, AgentID FROM tempAgent; 
+INSERT INTO tempCollector(occurrenceID, AgentID)
+SELECT occurrenceID, AgentID FROM tempAgent; 
 
 
-UPDATE tempCollector JOIN (SELECT OccID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY OccID) tMin ON tempCollector.OccID = tMin.OccID AND tempCollector.TempCollectorID = tMin.minValue
+UPDATE tempCollector JOIN (SELECT occurrenceID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY occurrenceID) tMin ON tempCollector.occurrenceID = tMin.occurrenceID AND tempCollector.TempCollectorID = tMin.minValue
 SET isPrimary = 1;
 
-UPDATE tempCollector JOIN (SELECT OccID, AgentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY AgentID) tMin ON tempCollector.AgentID = tMin.AgentID
+UPDATE tempCollector JOIN (SELECT occurrenceID, AgentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY AgentID) tMin ON tempCollector.AgentID = tMin.AgentID
 SET CollectorID = tMin.minValue;
 
 UPDATE tempDetermination
-SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempDetermination.OccID = tempAgent.OccID);
+SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempDetermination.occurrenceID = tempAgent.occurrenceID);
 
 UPDATE tempDetermination
-SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDetermination.OccID = tempColObject.OccID);
+SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDetermination.occurrenceID = tempColObject.occurrenceID);
 
 -- handle localities --
 
@@ -275,10 +275,10 @@ SET LocalityID = TempLocalityID WHERE LocalityID IS NULL;
 -- link locality/collector to CollectingEvent --
 
 UPDATE tempColEvent
-SET LocalityID = (SELECT LocalityID FROM tempLocality WHERE tempColEvent.OccID = tempLocality.OccID); 
+SET LocalityID = (SELECT LocalityID FROM tempLocality WHERE tempColEvent.occurrenceID = tempLocality.occurrenceID); 
 
 UPDATE tempColEvent
-SET CollectorID = (SELECT CollectorID FROM tempCollector WHERE tempColEvent.OccID = tempCollector.OccID AND tempCollector.IsPrimary IS NOT NULL);
+SET CollectorID = (SELECT CollectorID FROM tempCollector WHERE tempColEvent.occurrenceID = tempCollector.occurrenceID AND tempCollector.IsPrimary IS NOT NULL);
 
 -- handle ColEvent --
 
@@ -291,25 +291,25 @@ SET CollectionEventID = TempColEventID WHERE CollectionEventID IS NULL;
 -- link colevent to colobj/collector --
 
 UPDATE tempColObject 
-SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.OccID = tempColObject.OccID);
+SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.occurrenceID = tempColObject.occurrenceID);
 
 UPDATE tempCollector
-SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.OccID = tempCollector.OccID);
+SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.occurrenceID = tempCollector.occurrenceID);
 
 ALTER TABLE tempAgent
-DROP FOREIGN KEY OccID;  
+DROP FOREIGN KEY occurrenceID;  
 
 ALTER TABLE tempLocality
-DROP FOREIGN KEY OccID;
+DROP FOREIGN KEY occurrenceID;
 
 ALTER TABLE tempColEvent
-DROP FOREIGN KEY OccID;
+DROP FOREIGN KEY occurrenceID;
 
 ALTER TABLE tempColObject
-DROP FOREIGN KEY OccID;
+DROP FOREIGN KEY occurrenceID;
 	
 ALTER TABLE tempDetermination
-DROP FOREIGN KEY OccID;
+DROP FOREIGN KEY occurrenceID;
 
 DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
 
