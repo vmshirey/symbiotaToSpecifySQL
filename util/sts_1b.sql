@@ -180,8 +180,8 @@ INSERT INTO tempAgent(verbatimName, FirstName, LastName, occurrenceID, AgentType
 DELETE FROM tempLocality;
 INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
 	SELECT occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
-	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, `State`, County 
-	FROM (SELECT Country, `State`, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
+	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, stateProvince, County 
+	FROM (SELECT Country, stateProvince, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
 	
 -- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
 DELETE FROM tempColEvent;
