@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 	VerbatimLatitude varchar(50),
 	VerbatimLongitude varchar(50),
 	
-	Long1Text varchar(50),
+	Remarks text,
 	Country varchar(100),
 	`State` varchar(100),
 	County varchar(100)
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 
 /*(3)*/
 DROP TABLE IF EXISTS agentReclamation;
-CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), occurrenceID int(11));
+CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), occurrenceID int(10));
 
 -- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -178,7 +178,7 @@ INSERT INTO tempAgent(verbatimName, FirstName, LastName, occurrenceID, AgentType
 	SELECT identifiedBy, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', 1) AS FirstName, SUBSTRING_INDEX(dwc_view.identifiedBy, '.', -1) AS LastName, dwc_view.occurrenceID, 2, now() FROM dwc_view WHERE identifiedBy LIKE '%.%';
 
 DELETE FROM tempLocality;
-INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
+INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinElevation, VerbatimElevation, Remarks, VerbatimLatitude, VerbatimLongitude, Country, `State`, County)
 	SELECT occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
 	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, stateProvince, County 
 	FROM (SELECT Country, stateProvince, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
@@ -189,6 +189,12 @@ INSERT INTO tempColEvent(occurrenceID, StartDate, VerbatimDate)
 	SELECT occurrenceID, eventDate, verbatimEventDate
 	FROM dwc_view;
 	
+-- BEGIN INSERT INTO TEMPORARY COLLECTORS --	
+DELETE FROM tempCollector;
+INSERT INTO tempCollector(occurrenceID, AgentID)
+ 	SELECT dwc.occurrenceID, tAgent.tempAgentID 
+ 	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occurrenceID = tAgent.occurrenceID;
+	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
 DELETE FROM tempColObject;
 INSERT INTO tempColObject(occurrenceID, AltCatalogNumber, CatalogNumber)
@@ -197,8 +203,8 @@ INSERT INTO tempColObject(occurrenceID, AltCatalogNumber, CatalogNumber)
 
 -- BEGIN INSERT INTO TEMPORARY DETERMINATIONS --
 DELETE FROM tempDetermination;
-INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID)
-	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID 
+INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID, IsCurrent)
+	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID, 1 AS IsCurrent 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occurrenceID = tempColObj.occurrenceID;
 
 ALTER TABLE tempAgent
@@ -266,7 +272,7 @@ SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDe
 
 -- handle localities --
 
-UPDATE tempLocality JOIN (SELECT Long1Text, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Long1Text) tMin ON tempLocality.Long1Text = tMin.Long1Text AND tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
+UPDATE tempLocality JOIN (SELECT Remarks, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Remarks) tMin ON tempLocality.Remarks = tMin.Remarks AND tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
 SET LocalityID = tMin.minValue;
 
 UPDATE tempLocality
