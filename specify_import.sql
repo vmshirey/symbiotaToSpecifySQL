@@ -233,6 +233,13 @@ ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID,
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
 
+ALTER TABLE tempCollector
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
+
 ALTER TABLE tempColObject
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
