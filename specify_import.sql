@@ -6,11 +6,10 @@
 -- collecting events, collection objects and           --
 -- determinations									   --
 ---------------------------------------------------------
-
 DROP TABLE IF EXISTS tempAgent;
 CREATE TABLE IF NOT EXISTS tempAgent (
 
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempAgentID int(11) NOT NULL auto_increment PRIMARY KEY,
 	AgentID int(11),
 	TimestampCreated datetime,
@@ -26,7 +25,7 @@ DELETE FROM tempAgent;
 DROP TABLE IF EXISTS tempCollector;
 CREATE TABLE IF NOT EXISTS tempCollector (
 
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempCollectorID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectorID int(11),
 	TimestampCreated datetime,
@@ -42,7 +41,7 @@ DELETE FROM tempCollector;
 DROP TABLE IF EXISTS tempLocality;
 CREATE TABLE IF NOT EXISTS tempLocality (
 
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempLocalityID int(11) NOT NULL auto_increment PRIMARY KEY,
 	LocalityID int(11),
 	
@@ -66,7 +65,7 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 DROP TABLE IF EXISTS tempColEvent;
 CREATE TABLE IF NOT EXISTS tempColEvent (
 	
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempColEventID int(11) NOT NULL auto_increment PRIMARY KEY,
 	CollectionEventID int(11),
 	TimestampCreate datetime,
@@ -83,7 +82,7 @@ CREATE TABLE IF NOT EXISTS tempColEvent (
 DROP TABLE IF EXISTS tempColObject;
 CREATE TABLE IF NOT EXISTS tempColObject (
 
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempColObjectID int(11) auto_increment PRIMARY KEY,
 	CollectionObjectID int(11),
 	CollectionMemberID int(11),
@@ -97,7 +96,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 DROP TABLE IF EXISTS tempDetermination;
 CREATE TABLE IF NOT EXISTS tempDetermination (
 
-	occurrenceID int(10),
+	occurrenceID int(10) NOT NULL,
 	TempDeterminationID int(11) NOT NULL auto_increment PRIMARY KEY,
 	DeterminationID int(11),
 	TimestampCreated datetime,
@@ -114,7 +113,13 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 
 /*(3)*/
 DROP TABLE IF EXISTS agentReclamation;
-CREATE TABLE IF NOT EXISTS agentReclamation (tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY, tempAgentName varchar(170), finalID int(11), occurrenceID int(10));
+CREATE TABLE IF NOT EXISTS agentReclamation (
+
+	occurrenceID int(10) NOT NULL,
+	tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY,
+    tempAgentName varchar(170),
+    finalID int(11)
+);
 
 -- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
