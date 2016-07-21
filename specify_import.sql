@@ -1,16 +1,16 @@
 ---------------------------------------------------------
--- STS 1b                                              --
--- Vaughn Shirey 2016                                  --
+-- Vaughn Shirey / Vincent O'Leary 2016                                  --
 -- Creates temporary tables to emulate those in        --    
 -- Specify for agents, localities, collectors,         --
 -- collecting events, collection objects and           --
 -- determinations									   --
 ---------------------------------------------------------
+SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS tempAgent;
 CREATE TABLE IF NOT EXISTS tempAgent (
 
-	occurrenceID int(10) NOT NULL,
-	TempAgentID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempAgentID int(11) NOT NULL auto_increment UNIQUE,
 	AgentID int(11),
 	TimestampCreated datetime,
 	AgentType tinyint(4),
@@ -25,8 +25,8 @@ DELETE FROM tempAgent;
 DROP TABLE IF EXISTS tempCollector;
 CREATE TABLE IF NOT EXISTS tempCollector (
 
-	occurrenceID int(10) NOT NULL,
-	TempCollectorID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempCollectorID int(11) NOT NULL auto_increment UNIQUE,
 	CollectorID int(11),
 	TimestampCreated datetime,
 	
@@ -41,8 +41,8 @@ DELETE FROM tempCollector;
 DROP TABLE IF EXISTS tempLocality;
 CREATE TABLE IF NOT EXISTS tempLocality (
 
-	occurrenceID int(10) NOT NULL,
-	TempLocalityID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempLocalityID int(11) NOT NULL auto_increment UNIQUE,
 	LocalityID int(11),
 	
 	Latitude1 decimal(12,10),
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 DROP TABLE IF EXISTS tempColEvent;
 CREATE TABLE IF NOT EXISTS tempColEvent (
 	
-	occurrenceID int(10) NOT NULL,
-	TempColEventID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempColEventID int(11) NOT NULL auto_increment UNIQUE,
 	CollectionEventID int(11),
 	TimestampCreate datetime,
 	DisciplineID int(11),
@@ -82,8 +82,8 @@ CREATE TABLE IF NOT EXISTS tempColEvent (
 DROP TABLE IF EXISTS tempColObject;
 CREATE TABLE IF NOT EXISTS tempColObject (
 
-	occurrenceID int(10) NOT NULL,
-	TempColObjectID int(11) auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempColObjectID int(11) NOT NULL auto_increment UNIQUE,
 	CollectionObjectID int(11),
 	CollectionMemberID int(11),
 	CollectionEventID int(11),
@@ -96,8 +96,8 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 DROP TABLE IF EXISTS tempDetermination;
 CREATE TABLE IF NOT EXISTS tempDetermination (
 
-	occurrenceID int(10) NOT NULL,
-	TempDeterminationID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	TempDeterminationID int(11) NOT NULL auto_increment UNIQUE,
 	DeterminationID int(11),
 	TimestampCreated datetime,
 	CollectionMemberID int(11),
@@ -115,13 +115,12 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 DROP TABLE IF EXISTS agentReclamation;
 CREATE TABLE IF NOT EXISTS agentReclamation (
 
-	occurrenceID int(10) NOT NULL,
-	tempAgentNameID int(11) NOT NULL auto_increment PRIMARY KEY,
+	occurrenceID int(10) NOT NULL PRIMARY KEY,
+	tempAgentNameID int(11) NOT NULL auto_increment UNIQUE,
     tempAgentName varchar(170),
     finalID int(11)
 );
-
--- BEGIN INSERTING VALUES INTO APPROPRIATE FIELDS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+SET FOREIGN_KEY_CHECKS=1;
 
 /*(4)*/
 INSERT INTO tempAgent(verbatimName, occurrenceID)
@@ -187,18 +186,18 @@ INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinE
 	SELECT occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
 	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, stateProvince, County 
 	FROM (SELECT Country, stateProvince, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
-	
+		
 -- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
 DELETE FROM tempColEvent;
 INSERT INTO tempColEvent(occurrenceID, StartDate, VerbatimDate)
 	SELECT occurrenceID, eventDate, verbatimEventDate
 	FROM dwc_view;
-	
+    
 -- BEGIN INSERT INTO TEMPORARY COLLECTORS --	
 DELETE FROM tempCollector;
-INSERT INTO tempCollector(occurrenceID, AgentID)
- 	SELECT dwc.occurrenceID, tAgent.tempAgentID 
- 	FROM dwc_view AS dwc, tempAgent AS tAgent WHERE dwc.occurrenceID = tAgent.occurrenceID;
+INSERT INTO tempCollector(occurrenceID)
+ 	SELECT occurrenceID 
+ 	FROM dwc_view;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
 DELETE FROM tempColObject;
@@ -209,71 +208,74 @@ INSERT INTO tempColObject(occurrenceID, AltCatalogNumber, CatalogNumber)
 -- BEGIN INSERT INTO TEMPORARY DETERMINATIONS --
 DELETE FROM tempDetermination;
 INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID, IsCurrent)
-	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID, 1 AS IsCurrent 
+	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID, 1 as IsCurrent 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occurrenceID = tempColObj.occurrenceID;
 
+-- Update Foreign Keys for all tables -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+/*(5)*/
 ALTER TABLE tempAgent
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID; 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID),
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID),
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
 
 ALTER TABLE tempLocality
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID; 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID); 
 
 ALTER TABLE tempColEvent
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
 
 ALTER TABLE tempCollector
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempdetermination(occurrenceID);
 
 ALTER TABLE tempColObject
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
 	
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject.occurrenceID, 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector.occurrenceID;
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
+ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
 
+-- Finish updating temporary tables -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ALTER TABLE tempCollector
-ADD FOREIGN KEY (AgentID) REFERENCES tempAgent.AgentID;
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(AgentID);
 
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (AgentID) REFERENCES tempAgent.AgentID;
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(AgentID);
 
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject.TempColObjectID;
+ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject(TempColObjectID);
 
 ALTER TABLE tempColEvent
-ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality.LocalityID;
+ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality(LocalityID);
 
-INSERT INTO tempCollector(occurrenceID, AgentID)
-SELECT occurrenceID, AgentID FROM tempAgent; 
+UPDATE tempAgent JOIN (SELECT VerbatimName, MIN(TempAgentID) as minValue FROM tempAgent GROUP BY VerbatimName) tMin ON tempAgent.VerbatimName = tMin.VerbatimName
+SET AgentID = tMin.minValue;
 
-
-UPDATE tempCollector JOIN (SELECT occurrenceID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY occurrenceID) tMin ON tempCollector.occurrenceID = tMin.occurrenceID AND tempCollector.TempCollectorID = tMin.minValue
+UPDATE tempCollector JOIN (SELECT occurrenceID, agentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY agentID) tMin ON tempCollector.occurrenceID = tMin.occurrenceID AND tempCollector.TempCollectorID = tMin.minValue
 SET isPrimary = 1;
 
-UPDATE tempCollector JOIN (SELECT occurrenceID, AgentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY AgentID) tMin ON tempCollector.AgentID = tMin.AgentID
+UPDATE tempCollector JOIN (SELECT agentID, MIN(TempCollectorID) as minValue FROM tempCollector GROUP BY agentID) tMin ON tempCollector.agentID = tMin.agentID
 SET CollectorID = tMin.minValue;
 
 UPDATE tempDetermination
@@ -314,6 +316,10 @@ SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempCo
 UPDATE tempCollector
 SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.occurrenceID = tempCollector.occurrenceID);
 
+
+-- Remove temporary keys and IDs before final dump -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+/*(7)*/
 ALTER TABLE tempAgent
 DROP FOREIGN KEY occurrenceID;  
 
