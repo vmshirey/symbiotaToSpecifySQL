@@ -25,3 +25,9 @@ In order to successfully migrate data from a FileMaker or Symbiota instance to S
 
 3. You will need to execute a mysqldump to move your temporary tables to a new database. The temporary table names are:
  - tempCollector, tempColObject, tempColEvent, tempAgent, tempLocality, tempDetermination.
+
+4. Finally, executing specify_integrate one you have executed your mysqldump results using your Specify database should yield integrate from Filemaker/Symbiota into Specify. 
+
+### Additional Information
+
+This project is updated on a casual basis and may not fit all collection datasets. We strive to make this as general as possible to encompass most datasets, but realize that this is not always an option. If you run into serious issues with this code, please to not hesitate to open and issue or contact me directly.
