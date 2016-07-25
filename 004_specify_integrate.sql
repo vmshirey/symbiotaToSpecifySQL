@@ -6,12 +6,13 @@
 -- Create a reference table for maintaining the previous maximum IDs for various Specify tables --
 DROP TABLE IF EXISTS specifyIDReference;
 CREATE TABLE specifyIDReference (
+	placeholderKey int(10) NOT NULL PRIMARY KEY,
 	previousLocalityMax int(10),
 	previousColEventMax int(10),
 	previousColObjectMax int(10)
 );
-INSERT INTO specifyIDReference(previousLocalityMax, previousColEventMax, previousColObjectMax)
-SELECT MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID) FROM locality, collectionEvent, collectionObject;
+INSERT INTO specifyIDReference(placeholderKey, previousLocalityMax, previousColEventMax, previousColObjectMax)
+SELECT 1 as placeholderKey, MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID) FROM locality, collectionEvent, collectionObject;
 
 -- Create a reference table for taxonomy rankID definitions --
 DROP TABLE IF EXISTS rankIDDef;
@@ -31,4 +32,4 @@ SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, Ver
 
 -- Insert values that do rely on updating numbers --
 INSERT INTO collectingevent (TimestampCreated, Version, StartDate, LocalityID, DisciplineID)
-SELECT  now(), 0 as Version, StartDate, LocalityID + specifyIDReference.previousColEventMax, 3 as DisciplineID FROM tempColEvent, specifyIDReference;
+SELECT  now(), 0 as Version, StartDate, SUM(LocalityID + specifyIDReference.previousColEventMax), 3 as DisciplineID FROM tempColEvent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
