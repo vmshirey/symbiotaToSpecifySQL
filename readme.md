@@ -1,5 +1,4 @@
 #SymbiotaToSpecifySQL
-Process for importing Darwin Core records into Specify - written during my co-op at the Academy of Naural Sciences
 ------
 These files are being developed to assist importing records from Darwin Core standards into the DBMS Specify for natural history collections. As the process is completed and generalized, we will update this README with instructions for use.
 
