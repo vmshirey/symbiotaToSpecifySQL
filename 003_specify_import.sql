@@ -1,11 +1,14 @@
----------------------------------------------------------
--- Vaughn Shirey / Vincent O'Leary 2016                                  --
+-- ------------------------------------------------------
 -- Creates temporary tables to emulate those in        --    
 -- Specify for agents, localities, collectors,         --
 -- collecting events, collection objects and           --
 -- determinations									   --
----------------------------------------------------------
+-- ------------------------------------------------------
+
+-- CREATE TEMPORARY TABLES -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- TEMPORARY AGENTS --
 DROP TABLE IF EXISTS tempAgent;
 CREATE TABLE IF NOT EXISTS tempAgent (
 
@@ -37,7 +40,7 @@ CREATE TABLE IF NOT EXISTS tempCollector (
 );
 DELETE FROM tempCollector;
 
- -- TEMPORARY LOCALITIES --
+-- TEMPORARY LOCALITIES --
 DROP TABLE IF EXISTS tempLocality;
 CREATE TABLE IF NOT EXISTS tempLocality (
 
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS tempLocality (
 	County varchar(100)
 );
 
- -- TEMPORARY COLLECTION EVENTS --
+-- TEMPORARY COLLECTION EVENTS --
 DROP TABLE IF EXISTS tempColEvent;
 CREATE TABLE IF NOT EXISTS tempColEvent (
 	
@@ -78,7 +81,7 @@ CREATE TABLE IF NOT EXISTS tempColEvent (
 	LocalityID int(11)
 );
 
--- TEMPORARY COLLECTION OBJECT --
+-- TEMPORARY COLLECTION OBJECTS --
 DROP TABLE IF EXISTS tempColObject;
 CREATE TABLE IF NOT EXISTS tempColObject (
 
@@ -92,7 +95,7 @@ CREATE TABLE IF NOT EXISTS tempColObject (
 	CatalogNumber varchar(32)
 );
 
--- TEMPORARY DETERMINATION --
+-- TEMPORARY DETERMINATIONS --
 DROP TABLE IF EXISTS tempDetermination;
 CREATE TABLE IF NOT EXISTS tempDetermination (
 
@@ -109,9 +112,6 @@ CREATE TABLE IF NOT EXISTS tempDetermination (
 	AgentID int(11)
 );
 
--- TABLE FOR HANDLING AGENT ASSIGNMENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-/*(3)*/
 DROP TABLE IF EXISTS agentReclamation;
 CREATE TABLE IF NOT EXISTS agentReclamation (
 
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS agentReclamation (
 );
 SET FOREIGN_KEY_CHECKS=1;
 
-/*(4)*/
+-- PROCEDURE FOR HANDLING AGENT ASSIGNMENTS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 INSERT INTO tempAgent(verbatimName, occurrenceID)
 	SELECT recordedBy, occurrenceID FROM dwc_view;
 
@@ -186,18 +186,18 @@ INSERT INTO tempLocality(occurrenceID, Latitude1, Longitude1, MaxElevation, MinE
 	SELECT occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, SUBSTRING_INDEX(vCoord, ' ', 1) AS VerbatimLatitude, 
 	SUBSTRING_INDEX(vCoord, ' ', -1) AS VerbatimLongitude, Country, stateProvince, County 
 	FROM (SELECT Country, stateProvince, County, occurrenceID, decimalLatitude, decimalLongitude, maximumElevationInMeters, minimumElevationInMeters, verbatimElevation, locality, verbatimCoordinates AS vCoord FROM dwc_view) AS localityTable ORDER BY locality;
-		
--- BEGIN INSERT WITH TEMPORARY COLLECTION EVENTS --
-DELETE FROM tempColEvent;
-INSERT INTO tempColEvent(occurrenceID, StartDate, VerbatimDate)
-	SELECT occurrenceID, eventDate, verbatimEventDate
-	FROM dwc_view;
-    
+	
 -- BEGIN INSERT INTO TEMPORARY COLLECTORS --	
 DELETE FROM tempCollector;
 INSERT INTO tempCollector(occurrenceID)
  	SELECT occurrenceID 
  	FROM dwc_view;
+
+-- BEGIN INSERT INTO TEMPORARY COLLECTION EVENTS --
+DELETE FROM tempColEvent;
+INSERT INTO tempColEvent(occurrenceID, StartDate, VerbatimDate)
+	SELECT occurrenceID, eventDate, verbatimEventDate
+	FROM dwc_view;
 	
 -- BEGIN INSERT INTO TEMPORARY COLLECTION OBJECT --
 DELETE FROM tempColObject;
@@ -211,9 +211,7 @@ INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID, IsCurre
 	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID, 1 as IsCurrent 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occurrenceID = tempColObj.occurrenceID;
 
--- Update Foreign Keys for all tables -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-/*(5)*/
+-- UPDATE FOREIGN KEYS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ALTER TABLE tempAgent
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID),
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
@@ -256,19 +254,19 @@ ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID),
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
 ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
 
--- Finish updating temporary tables -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 ALTER TABLE tempCollector
-ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(AgentID);
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(tempAgentID);
 
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(AgentID);
+ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(tempAgentID);
 
 ALTER TABLE tempDetermination
-ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject(TempColObjectID);
+ADD FOREIGN KEY (CollectionObjectID) REFERENCES tempColObject(tempColObjectID);
 
 ALTER TABLE tempColEvent
-ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality(LocalityID);
+ADD FOREIGN KEY (LocalityID) REFERENCES tempLocality(tempLocalityID);
 
+-- UPDATE TEMPORARY TABLES --  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 UPDATE tempAgent JOIN (SELECT VerbatimName, MIN(TempAgentID) as minValue FROM tempAgent GROUP BY VerbatimName) tMin ON tempAgent.VerbatimName = tMin.VerbatimName
 SET AgentID = tMin.minValue;
 
@@ -285,7 +283,6 @@ UPDATE tempDetermination
 SET CollectionObjectID = (SELECT TempColObjectID FROM tempColObject WHERE tempDetermination.occurrenceID = tempColObject.occurrenceID);
 
 -- handle localities --
-
 UPDATE tempLocality JOIN (SELECT Remarks, Latitude1, Longitude1, MIN(TempLocalityID) as minValue FROM tempLocality GROUP BY Remarks) tMin ON tempLocality.Remarks = tMin.Remarks AND tempLocality.Latitude1 = tMin.Latitude1 AND tempLocality.Longitude1 = tMin.Longitude1 
 SET LocalityID = tMin.minValue;
 
@@ -293,7 +290,6 @@ UPDATE tempLocality
 SET LocalityID = TempLocalityID WHERE LocalityID IS NULL;
 
 -- link locality/collector to CollectingEvent --
-
 UPDATE tempColEvent
 SET LocalityID = (SELECT LocalityID FROM tempLocality WHERE tempColEvent.occurrenceID = tempLocality.occurrenceID); 
 
@@ -301,7 +297,6 @@ UPDATE tempColEvent
 SET CollectorID = (SELECT CollectorID FROM tempCollector WHERE tempColEvent.occurrenceID = tempCollector.occurrenceID AND tempCollector.IsPrimary IS NOT NULL);
 
 -- handle ColEvent --
-
 UPDATE tempColEvent JOIN (SELECT StartDate, LocalityID, CollectorID, MIN(TempColEventID) as minValue FROM tempColEvent GROUP BY StartDate) tMin ON tempColEvent.StartDate = tMin.StartDate AND tempColEvent.LocalityID = tMin.LocalityID AND tempColEvent.CollectorID = tMin.CollectorID
 SET CollectionEventID = tMin.minValue;
 
@@ -309,7 +304,6 @@ UPDATE tempColEvent
 SET CollectionEventID = TempColEventID WHERE CollectionEventID IS NULL;
 
 -- link colevent to colobj/collector --
-
 UPDATE tempColObject 
 SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.occurrenceID = tempColObject.occurrenceID);
 
@@ -319,27 +313,16 @@ SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempCo
 UPDATE tempCollector
 SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempAgent.occurrenceID = tempCollector.occurrenceID);
 
-
--- Remove temporary keys and IDs before final dump -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-/*(7)*/
-ALTER TABLE tempAgent
-DROP FOREIGN KEY occurrenceID;  
-
-ALTER TABLE tempLocality
-DROP FOREIGN KEY occurrenceID;
-
-ALTER TABLE tempColEvent
-DROP FOREIGN KEY occurrenceID;
-
-ALTER TABLE tempColObject
-DROP FOREIGN KEY occurrenceID;
-	
-ALTER TABLE tempDetermination
-DROP FOREIGN KEY occurrenceID;
+-- DROP FOREIGN KEYS AND COLLAPSE TABLES ON ID -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+SET FOREIGN_KEY_CHECKS = 0;
 
 DELETE FROM tempAgent WHERE tempAgent.AgentID != tempAgent.TempAgentID;
 
 DELETE FROM tempColEvent WHERE tempColEvent.CollectionEventID != tempColEvent.TempColEventID;
 
 DELETE FROM tempLocality WHERE tempLocality.LocalityID != tempLocality.tempLocalityID;
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ------------------------------------------------------
+-- END                                        		   --
+-- ------------------------------------------------------
