@@ -310,6 +310,9 @@ SET CollectionEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempCo
 UPDATE tempCollector
 SET CollectingEventID = (SELECT CollectionEventID FROM tempColEvent WHERE tempColEvent.occurrenceID = tempCollector.occurrenceID);
 
+UPDATE tempCollector
+SET AgentID = (SELECT AgentID FROM tempAgent WHERE tempAgent.occurrenceID = tempCollector.occurrenceID);
+
 -- DROP FOREIGN KEYS AND COLLAPSE TABLES ON ID -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 SET FOREIGN_KEY_CHECKS = 0;
 
