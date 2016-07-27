@@ -1,8 +1,8 @@
 -- Create MySQL table for a taxon authority file --
 
 -- 1. Import auhority file for taxonomy, this workflow is using a tab separated file from paleobiodb.org and will need updated for other files --
-DROP TABLE `auth_taxa`;
-CREATE TABLE `auth_taxa` 
+DROP TABLE IF EXISTS`auth_taxa`;
+CREATE TABLE IF NOT EXISTS `auth_taxa` 
 (`orig_no` VARCHAR(10),
 `taxon_no` VARCHAR(10),
 `record_type` VARCHAR(10),
@@ -17,7 +17,7 @@ TRUNCATE TABLE `auth_taxa`;
 
 -- Update file name for import --
 
-LOAD DATA LOCAL INFILE '' INTO TABLE `auth_taxa`;
+LOAD DATA LOCAL INFILE 'D:\\taxa.tsv' INTO TABLE `auth_taxa`;
 
 -- 2. Create view for Specify table --
 

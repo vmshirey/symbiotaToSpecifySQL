@@ -2,8 +2,8 @@
 
 -- 1. Create table
 
-DROP TABLE temptaxonomy;
-CREATE TABLE tempTaxonomy(
+DROP TABLE IF EXISTS temptaxonomy;
+CREATE TABLE IF NOT EXISTS tempTaxonomy(
 `TID` INT(11) auto_increment PRIMARY KEY,
 `TimestampCreated` datetime,
 `Version` INT(10),
@@ -20,7 +20,7 @@ CREATE TABLE tempTaxonomy(
 
 -- 2. Insert table with authority records for taxonomy --
 INSERT INTO temptaxonomy (TimestampCreated, Version, FullName, TaxonRank, TaxonTreeDefID, TaxonTreeDefItemID, PreviousTID, PreviousPID, CollectionCode)
-SELECT now(), 0 as Version, FullName, TaxonRank, 1, 1, TaxonID, ParentID, "VP" as CollectionCode FROM auth_view;
+SELECT now(), 0 as Version, FullName, TaxonRank, 1 as TaxonTreeDefID, 1 as TaxonTreeDefItemID, TaxonID, ParentID, "VP" as CollectionCode FROM auth_view;
 
 -- Update RankID and TaxonDef for Specify --
 
@@ -54,7 +54,6 @@ UPDATE temptaxonomy
 SET RankID = 240 WHERE TaxonRank = 'Varieties';
 UPDATE temptaxonomy
 SET RankID = 260 WHERE TaxonRank = 'Form';
-
 
 UPDATE temptaxonomy
 SET TaxonTreeDefItemID = 1 WHERE RankID = 0; -- Life
