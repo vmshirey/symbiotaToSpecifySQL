@@ -69,10 +69,10 @@ LEFT JOIN (SELECT g.name AS stateName, g.geographyID
 UPDATE locality JOIN (SELECT * FROM geography JOIN (SELECT GeographyID as geoID, Name AS ParentName FROM geography) AS parent ON parent.geoID = geography.ParentID) AS geo 
 ON geo.FullName LIKE CONCAT('%', geo.ParentName, '%', geo.Name, '%')
 SET locality.GeographyID = geo.GeographyID
-WHERE locality.TimestampCreated = "2016-05-18 10:11:17" -- change
+WHERE GETDATE(locality.TimestampCreated) = CURDATE() 
 AND locality.GeographyID IS NULL;
 
 UPDATE locality JOIN geography ON geography.Name LIKE locality.country
 SET locality.GeographyID = geography.GeographyID
-WHERE locality.TimestampCreated = "2016-05-18 10:11:17" -- change
+WHERE GETDATE(locality.TimestampCreated) = CURDATE() 
 AND locality.GeographyID IS NULL;
