@@ -45,7 +45,17 @@ SELECT now(), 0 as Version, 4 as CollectionMemberID, SUM(CollectingEventID, spec
 FROM tempColObject, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 -- Insert taxonomy --
+INSERT INTO taxon (TimestampCreated, IsAccepted, IsHybrid, Version, FullName, `Name`, RankID, TaxonTreeDefID, TaxonTreeDefItemID, PreviousParentID, ParentName, PreviousTaxonID, CollectionCode)
+SELECT now(), 1 as IsAccepted, 0 as IsHybrid, Version, FullName, SUBSTRING_INDEX(`FullName`, ' ', -1) as `Name`, RankID, TaxonTreeDefID, 1 as TaxonTreeDefItemID, PreviousPID, ParentName, PreviousTID, 'VP' as CollectionCode FROM taxon_reclamation;
 
+UPDATE taxon (SELECT taxon.RankID, rankIDDef.TaxonTreeDefItemID FROM taxon INNER JOIN rankIDDef) AS taxrank ON taxrank.RankID = rankIDDef.rankID
+SET taxon.TaxonTreeDefItemID = taxrank.TaxonTreeDefItemID WHERE CollectionCode = '';
+
+UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = '') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
+SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = '';
+
+UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID, Name FROM taxon WHERE CollectionCode = '') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
+SET taxon.ParentName = parents.Name WHERE CollectionCode = '';
 
 -- Insert determinations for reassociation with Specify taxonomy --
 INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, oldTaxonID, CollectionObjectID, DeterminerID)
