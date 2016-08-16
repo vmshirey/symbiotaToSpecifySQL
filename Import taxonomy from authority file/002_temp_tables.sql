@@ -3,7 +3,7 @@
 -- 1. Create table
 
 DROP TABLE IF EXISTS temptaxonomy;
-CREATE TABLE IF NOT EXISTS tempTaxonomy(
+CREATE TABLE IF NOT EXISTS temptaxonomy(
 `TID` INT(11) auto_increment PRIMARY KEY,
 `TimestampCreated` datetime,
 `Version` INT(10),
