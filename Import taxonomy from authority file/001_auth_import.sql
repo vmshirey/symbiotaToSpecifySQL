@@ -26,7 +26,7 @@ SELECT orig_no AS TaxonID,
 taxon_rank AS TaxonRank,
 taxon_name AS FullName,
 parent_no AS ParentID
-FROM darwincorevp.auth_taxa
+FROM auth_taxa
 
 -- Update these fields as necessary for the authority file --
 
