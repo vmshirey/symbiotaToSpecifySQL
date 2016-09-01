@@ -3,8 +3,6 @@
 -- matches the output expected from our FileMaker      --
 -- ------------------------------------------------------
 
-USE darwincore;
-
 -- Create table for Darwin Core archive
 DROP TABLE IF EXISTS dwc_archive;
 CREATE TABLE IF NOT EXISTS dwc_archive 

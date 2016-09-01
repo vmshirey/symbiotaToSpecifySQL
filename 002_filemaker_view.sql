@@ -2,7 +2,6 @@
 -- Creates a view of data from a Darwin Core archive   --
 -- ------------------------------------------------------
 
-USE darwincore;
 DROP VIEW IF EXISTS dwc_view; 
 CREATE VIEW dwc_view AS
 SELECT occurrenceID, 
@@ -23,9 +22,11 @@ recordedBy,
 country,
 stateProvince, 
 county,
+'order',
 family, 
-scientificName,
 genus,
+specificEpithet,
+scientificName,
 basisofrecord
 FROM dwc_archive;
 
