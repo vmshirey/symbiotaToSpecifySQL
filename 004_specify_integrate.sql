@@ -11,7 +11,7 @@ CREATE TABLE specifyIDReference (
 	previousColEventMax int(10),
 	previousColObjectMax int(10)
 );
-DELETE * FROM specifyIDReference;
+TRUNCATE TABLE specifyIDReference;
 INSERT INTO specifyIDReference(placeholderKey, previousLocalityMax, previousColEventMax, previousColObjectMax)
 SELECT 1 as placeholderKey, MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID) FROM locality, collectionEvent, collectionObject;
 
