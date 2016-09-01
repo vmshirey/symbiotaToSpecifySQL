@@ -1,8 +1,8 @@
--- Update taxonID to corresponse with new authority file --
+-- Update taxonID after importing DwC archive to corresponse with new authority file --
 
 -- Run this step if TaxonID already exists --
-ALTER TABLE dwc_archive
-DROP COLUMN TaxonID;
+-- ALTER TABLE dwc_archive
+-- DROP COLUMN TaxonID;
 
 ALTER TABLE dwc_archive
 ADD COLUMN TaxonID VARCHAR(20);

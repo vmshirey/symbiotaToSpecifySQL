@@ -7,7 +7,7 @@ CREATE VIEW dwc_view AS
 SELECT occurrenceID, 
 catalogNumber, 
 otherCatalogNumbers, 
-null as taxonID,
+taxonID,
 null as eventDate,
 verbatimEventDate, 
 null as decimalLatitude, 
