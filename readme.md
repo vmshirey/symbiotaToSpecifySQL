@@ -30,4 +30,4 @@ In order to successfully migrate data from a FileMaker or Symbiota instance to S
 
 ### Additional Information
 
-This project is updated on a casual basis and may not fit all collection datasets. We strive to make this as general as possible to encompass most datasets, but realize that this is not always an option. If you run into serious issues with this code, please to not hesitate to open and issue or contact me directly.
+This project is updated on a casual basis and may not fit all collection datasets. We strive to make this as general as possible to encompass most datasets, but realize that this is not always an option. If you run into serious issues with this code, please do not hesitate to open and issue or contact me directly.
