@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS temptaxonomy(
 `TID` INT(11) auto_increment PRIMARY KEY,
 `PID` INT(11),
 `TimestampCreated` datetime,
-`FullName` VARCHAR(128),
+`Name` VARCHAR(128),
 `TaxonRank` VARCHAR(16),
 `RankID` VARCHAR(10),
 `TaxonTreeDefID` VARCHAR(10),
@@ -19,14 +19,14 @@ CREATE TABLE IF NOT EXISTS temptaxonomy(
 ); 
 
 -- 2. Insert table with authority records for taxonomy --
-INSERT INTO temptaxonomy (TimestampCreated, FullName, TaxonRank, TaxonTreeDefID, TaxonTreeDefItemID, PreviousTID, PreviousPID, CollectionCode)
-SELECT now(), FullName, TaxonRank, 1 as TaxonTreeDefID, 1 as TaxonTreeDefItemID, TaxonID, ParentID, "VP" as CollectionCode FROM auth_view;
+INSERT INTO temptaxonomy (TimestampCreated, `Name`, TaxonRank, TaxonTreeDefID, TaxonTreeDefItemID, PreviousTID, PreviousPID, ParentName, CollectionCode)
+SELECT now(), `Name`, TaxonRank, 1 as TaxonTreeDefID, 1 as TaxonTreeDefItemID, TaxonID, ParentID, ParentName, "VP" as CollectionCode FROM auth_view;
 
 UPDATE temptaxonomy INNER JOIN (SELECT TID, PreviousTID FROM temptaxonomy) AS parents ON parents.PreviousTID = temptaxonomy.PreviousPID
 SET temptaxonomy.PID = parents.TID;
 
-UPDATE temptaxonomy INNER JOIN (SELECT TID, PreviousTID, FullName FROM temptaxonomy) AS parents ON parents.PreviousTID = temptaxonomy.PreviousPID
-SET temptaxonomy.ParentName = parents.FullName;
+UPDATE temptaxonomy INNER JOIN (SELECT TID, PreviousTID, `Name` FROM temptaxonomy) AS parents ON parents.PreviousTID = temptaxonomy.PreviousPID
+SET temptaxonomy.ParentName = parents.Name;
 
 -- Update RankID and TaxonDef for Specify --
 

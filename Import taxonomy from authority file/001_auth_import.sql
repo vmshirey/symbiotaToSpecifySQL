@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `auth_taxa`
 `taxon_rank` VARCHAR(16),
 `taxon_name` VARCHAR(128),
 `parent_no` VARCHAR(10),
+`parent_name` VARCHAR(128),
 `reference_no` VARCHAR(10),
 `is_extant` VARCHAR(10),
 `n_occs` VARCHAR(10));
@@ -22,10 +23,11 @@ LOAD DATA LOCAL INFILE 'D:\\taxa.tsv' INTO TABLE `auth_taxa`;
 -- 2. Create view for Specify table --
 
 CREATE OR REPLACE VIEW auth_view AS
-SELECT orig_no AS TaxonID,
+SELECT taxon_no AS TaxonID,
 taxon_rank AS TaxonRank,
-taxon_name AS FullName,
-parent_no AS ParentID
+taxon_name AS `Name`,
+parent_no AS ParentID,
+parent_name AS ParentName
 FROM auth_taxa
 
 -- Update these fields as necessary for the authority file --

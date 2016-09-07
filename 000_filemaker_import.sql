@@ -6,10 +6,11 @@
 -- Create table for Darwin Core archive
 DROP TABLE IF EXISTS dwc_archive;
 CREATE TABLE IF NOT EXISTS dwc_archive 
-(otherCatalogNumbers VARCHAR(16),
+(UUID VARCHAR(64),
 institutioncode VARCHAR(4),
 collectioncode VARCHAR(32),
-catalognumber VARCHAR(8),
+catalognumber VARCHAR(16),
+otherCatalogNumbers VARCHAR(16),
 typestatus VARCHAR(256),
 individualcount VARCHAR(32),
 higherclassification VARCHAR(256),
@@ -53,9 +54,9 @@ basisofrecord VARCHAR(16),
 datasetname VARCHAR(64),
 disposition VARCHAR(256),
 modified VARCHAR(16),
-bibliographiccitation VARCHAR(256),
-associatedmedia VARCHAR(256),
-associatedreferences VARCHAR(256));
+bibliographiccitation VARCHAR(64),
+associatedmedia VARCHAR(512),
+associatedreferences VARCHAR(1024));
 TRUNCATE TABLE dwc_archive;
 
 -- Import date from a local file --
