@@ -211,49 +211,8 @@ INSERT INTO tempDetermination(occurrenceID, TaxonID, CollectionObjectID, IsCurre
 	SELECT dwc.occurrenceID, dwc.taxonID, tempColObj.CollectionObjectID, 1 as IsCurrent 
 	FROM dwc_view AS dwc, tempColObject AS tempColObj WHERE dwc.occurrenceID = tempColObj.occurrenceID;
 
--- UPDATE FOREIGN KEYS -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-ALTER TABLE tempAgent
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID),
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID),
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
-
-ALTER TABLE tempLocality
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID); 
-
-ALTER TABLE tempColEvent
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
-
-ALTER TABLE tempCollector
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempdetermination(occurrenceID);
-
-ALTER TABLE tempColObject
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempDetermination(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
-	
-ALTER TABLE tempDetermination
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempAgent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempLocality(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColEvent(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempColObject(occurrenceID), 
-ADD FOREIGN KEY (occurrenceID) REFERENCES tempCollector(occurrenceID);
-
+-- Removed linking on occurrenceIDs here --
+-- ADD FK INTO TEMPORARY TABLES --
 ALTER TABLE tempCollector
 ADD FOREIGN KEY (AgentID) REFERENCES tempAgent(tempAgentID);
 
