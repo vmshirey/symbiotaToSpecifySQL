@@ -9,11 +9,12 @@ CREATE TABLE specifyIDReference (
 	placeholderKey int(10) NOT NULL PRIMARY KEY,
 	previousLocalityMax int(10),
 	previousColEventMax int(10),
-	previousColObjectMax int(10)
+	previousColObjectMax int(10),
+	previousAgentMax int(10)
 );
 TRUNCATE TABLE specifyIDReference;
 INSERT INTO specifyIDReference(placeholderKey, previousLocalityMax, previousColEventMax, previousColObjectMax)
-SELECT 1 as placeholderKey, MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID) FROM locality, collectionEvent, collectionObject;
+SELECT 1 as placeholderKey, MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID), MAX(AgentID) FROM locality, collectionEvent, collectionObject, agent;
 
 -- Create a reference table for taxonomy rankID definitions --
 DROP TABLE IF EXISTS rankIDDef;
@@ -26,22 +27,22 @@ VALUES (1, 0), (2, 10), (3, 30), (9, 40), (4, 60), (5, 100), (6, 140), (7, 180),
 
 -- Insert values that do not rely on updating numbers based on the previous maximum number for each table --
 INSERT INTO agent (AgentID, TimestampCreated, Version, AgentType, FirstName, LastName, DivisionID)
-SELECT AgentID, now(), 0 as Version, 1 as AgentType, FirstName, LastName, 2 as DivisionID FROM tempAgent;
+SELECT AgentID+previousAgentMax, now(), 0 as Version, 1 as AgentType, FirstName, LastName, 2 as DivisionID FROM tempAgent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO locality (TimestampCreated, Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, DisciplineID, Country, `State`, County)
 SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID, Country, `State`, County  FROM tempLocality;
 
 -- Insert values that do rely on updating numbers --
 INSERT INTO collectingevent (TimestampCreated, Version, StartDate, LocalityID, DisciplineID)
-SELECT  now(), 0 as Version, StartDate, SUM(LocalityID, specifyIDReference.previousLocalityMax), 3 as DisciplineID 
+SELECT  now(), 0 as Version, StartDate, LocalityID + previousLocalityMax, 3 as DisciplineID 
 FROM tempColEvent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO collector (TimestampCreated, Version, IsPrimary, DivisionID, CollectingEventID, AgentID)
-SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, SUM(CollectingEventID, specifyIDReference.previousColEventMax), AgentID 
+SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, CollectingEventID + previousColEventMax, AgentID 
 FROM tempCollector, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO collectionobject (TimestampCreated, Version, CollectionMemberID, CollectingEventID, CollectionID, CatalogNumber, AltCatalogNumber, previousOccid)
-SELECT now(), 0 as Version, 4 as CollectionMemberID, SUM(CollectingEventID, specifyIDReference.previousColEventMax), 4 as CollectionID, CatalogNumber, AltCatalogNumber, occid 
+SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectingEventID + previousColEventMax, 4 as CollectionID, CatalogNumber, AltCatalogNumber, occid 
 FROM tempColObject, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 -- Insert taxonomy --
