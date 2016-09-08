@@ -26,8 +26,8 @@ INSERT INTO rankIDDef(TaxonTreeDefItemID, rankID)
 VALUES (1, 0), (2, 10), (3, 30), (9, 40), (4, 60), (5, 100), (6, 140), (7, 180), (10, 190), (8, 220), (11, 230), (12, 240), (13, 260), (14, 50);
 
 -- Insert values that do not rely on updating numbers based on the previous maximum number for each table --
-INSERT INTO agent (AgentID, TimestampCreated, Version, AgentType, FirstName, LastName, DivisionID)
-SELECT AgentID+previousAgentMax, now(), 0 as Version, 1 as AgentType, FirstName, LastName, 2 as DivisionID FROM tempAgent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
+INSERT INTO agent (TimestampCreated, Version, AgentType, FirstName, LastName, DivisionID)
+SELECT now(), 0 as Version, 1 as AgentType, FirstName, LastName, 2 as DivisionID FROM tempAgent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO locality (TimestampCreated, Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, DisciplineID, Country, `State`, County)
 SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID, Country, `State`, County  FROM tempLocality;
@@ -38,7 +38,7 @@ SELECT  now(), 0 as Version, StartDate, LocalityID + previousLocalityMax, 3 as D
 FROM tempColEvent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO collector (TimestampCreated, Version, IsPrimary, DivisionID, CollectingEventID, AgentID)
-SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, CollectingEventID + previousColEventMax, AgentID 
+SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, CollectingEventID + previousColEventMax, AgentID+previousAgentMax 
 FROM tempCollector, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO collectionobject (TimestampCreated, Version, CollectionMemberID, CollectingEventID, CollectionID, CatalogNumber, AltCatalogNumber, previousOccid)
@@ -60,7 +60,7 @@ SET taxon.ParentName = parents.Name WHERE CollectionCode = '';
 
 -- Insert determinations for reassociation with Specify taxonomy --
 INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, oldTaxonID, CollectionObjectID, DeterminerID)
-SELECT collectionobject.TimestampCreated, 1 as Version, 4 as CollectionMemberID, TaxonID, collectionobject.CollectionObjectID, AgentID
+SELECT collectionobject.TimestampCreated, 1 as Version, 4 as CollectionMemberID, TaxonID, collectionobject.CollectionObjectID, AgentID+previousAgentMax
 FROM tempDetermination, collectionobject;
 
 -- Update determinations to corresponse with new taxonomy tree --
