@@ -1,0 +1,1 @@
+This script is used to create a view based on Darwin Core in Symbiota from the omoccurrences table. This view can then be used to import into Specify.

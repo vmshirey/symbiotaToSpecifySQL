@@ -1,0 +1,1 @@
+These scripts are used to import FileMaker data into mysql, add TaxonID information from an authority file, and then create a view based on Darwin Core to use for Specify.
