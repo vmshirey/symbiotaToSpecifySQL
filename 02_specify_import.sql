@@ -13,8 +13,8 @@ CREATE TABLE specifyIDReference (
 	previousAgentMax int(10)
 );
 TRUNCATE TABLE specifyIDReference;
-INSERT INTO specifyIDReference(placeholderKey, previousLocalityMax, previousColEventMax, previousColObjectMax)
-SELECT 1 as placeholderKey, MAX(LocalityID), MAX(CollectionEventID), MAX(CollectionObjectID), MAX(AgentID) FROM locality, collectionEvent, collectionObject, agent;
+INSERT INTO specifyIDReference(placeholderKey, previousLocalityMax, previousColEventMax, previousColObjectMax, previousAgentMax)
+SELECT 1 as placeholderKey, MAX(locality.LocalityID), MAX(collectingevent.CollectingEventID), MAX(collectionobject.CollectionObjectID), MAX(agent.AgentID) FROM locality, collectingevent, collectionobject, agent
 
 -- Create a reference table for taxonomy rankID definitions --
 DROP TABLE IF EXISTS rankIDDef;
@@ -30,7 +30,7 @@ INSERT INTO agent (TimestampCreated, Version, AgentType, FirstName, LastName, Di
 SELECT now(), 0 as Version, 1 as AgentType, FirstName, LastName, 2 as DivisionID FROM tempAgent, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO locality (TimestampCreated, Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, DisciplineID, Country, `State`, County)
-SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Long1Text, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID, Country, `State`, County  FROM tempLocality;
+SELECT  now(), 0 as Version, Latitude1, Longitude1, MaxElevation, Remarks, VerbatimLatitude, VerbatimLongitude, 3 as DisciplineID, Country, `State`, County  FROM tempLocality;
 
 -- Insert values that do rely on updating numbers --
 INSERT INTO collectingevent (TimestampCreated, Version, StartDate, LocalityID, DisciplineID)
@@ -42,26 +42,26 @@ SELECT now(), 0 as Version, IsPrimary, 2 as DivisionID, CollectingEventID + prev
 FROM tempCollector, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 INSERT INTO collectionobject (TimestampCreated, Version, CollectionMemberID, CollectingEventID, CollectionID, CatalogNumber, AltCatalogNumber, previousOccid)
-SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectingEventID + previousColEventMax, 4 as CollectionID, CatalogNumber, AltCatalogNumber, occid 
+SELECT now(), 0 as Version, 4 as CollectionMemberID, CollectionEventID + previousColEventMax, 4 as CollectionID, CatalogNumber, AltCatalogNumber, occurrenceID 
 FROM tempColObject, specifyIDReference WHERE specifyIDReference.placeholderKey = 1;
 
 -- Insert taxonomy (USE APPROPRIATE COLLECTION CODE)--
 INSERT INTO taxon (TimestampCreated, IsAccepted, IsHybrid, Version, FullName, `Name`, RankID, TaxonTreeDefID, TaxonTreeDefItemID, PreviousParentID, ParentName, PreviousTaxonID, CollectionCode)
-SELECT now(), 1 as IsAccepted, 0 as IsHybrid, Version, FullName, SUBSTRING_INDEX(`FullName`, ' ', -1) as `Name`, RankID, TaxonTreeDefID, 1 as TaxonTreeDefItemID, PreviousPID, ParentName, PreviousTID, 'VP' as CollectionCode FROM taxon_reclamation;
+SELECT now(), 1 as IsAccepted, 0 as IsHybrid, Version, FullName, SUBSTRING_INDEX(`FullName`, ' ', -1) as `Name`, RankID, TaxonTreeDefID, 1 as TaxonTreeDefItemID, PreviousPID, ParentName, PreviousTID, 'VP' as CollectionCode FROM tempTaxonomy;
 
 UPDATE taxon (SELECT taxon.RankID, rankIDDef.TaxonTreeDefItemID FROM taxon INNER JOIN rankIDDef) AS taxrank ON taxrank.RankID = rankIDDef.rankID
-SET taxon.TaxonTreeDefItemID = taxrank.TaxonTreeDefItemID WHERE CollectionCode = ''; -- Collection code needs to be changed depending on import
+SET taxon.TaxonTreeDefItemID = taxrank.TaxonTreeDefItemID WHERE CollectionCode = 'VP'; -- Collection code needs to be changed depending on import
 
-UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = '') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
-SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = ''; -- Collection code needs to be changed depending on import
+UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID FROM taxon WHERE CollectionCode = 'VP') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
+SET taxon.ParentID = parents.TaxonID WHERE CollectionCode = 'VP'; -- Collection code needs to be changed depending on import
 
-UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID, Name FROM taxon WHERE CollectionCode = '') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
-SET taxon.ParentName = parents.Name WHERE CollectionCode = ''; -- Collection code needs to be changed depending on import
+UPDATE taxon INNER JOIN (SELECT TaxonID, PreviousTaxonID, Name FROM taxon WHERE CollectionCode = 'VP') AS parents ON parents.PreviousTaxonID = taxon.PreviousParentID
+SET taxon.ParentName = parents.Name WHERE CollectionCode = 'VP'; -- Collection code needs to be changed depending on import
 
 -- Insert determinations for reassociation with Specify taxonomy --
 INSERT INTO determination (TimestampCreated, Version, CollectionMemberID, oldTaxonID, CollectionObjectID, DeterminerID)
-SELECT collectionobject.TimestampCreated, 1 as Version, 4 as CollectionMemberID, TaxonID, collectionobject.CollectionObjectID, AgentID+previousAgentMax
-FROM tempDetermination, collectionobject;
+SELECT now() as TimestampCreated, 1 as Version, 4 as CollectionMemberID, TaxonID, tempDetermination.CollectionObjectID+previousColObjectMax, AgentID+previousAgentMax
+FROM tempDetermination, collectionobject, specifyIDReference WHERE placeholderKey = 1;
 
 -- Update determinations to corresponse with new taxonomy tree --
 UPDATE determination INNER JOIN (SELECT TaxonID FROM taxon WHERE CollectionCode = "") as taxa ON determination.oldTaxonID = taxa.TaxonID -- Collection code needs to be changed depending on import
